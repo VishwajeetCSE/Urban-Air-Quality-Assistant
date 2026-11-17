@@ -1,0 +1,27 @@
+{
+  "name": "smogguard-ai",
+  "version": "1.0.0",
+  "description": "SmogGuard AI — Urban Air Quality & Winter Smog Assistant",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "test": "node test.js",
+    "lint": "node scripts/lint.js",
+    "start": "node -e \"import('http').then(h => h.createServer((req,res) => { const fs = await import('fs'); const p = req.url === '/' ? '/index.html' : req.url; const ext = p.split('.').pop(); const m = {html:'text/html',css:'text/css',js:'application/javascript',json:'application/json'}; try { res.writeHead(200, {'Content-Type': m[ext]||'text/plain'}); res.end(fs.readFileSync('.' + p)); } catch { res.writeHead(404); res.end('Not found'); } }).listen(3000, () => console.log('Serving on http://localhost:3000')))\""
+  },
+  "keywords": [
+    "air-quality",
+    "pm25",
+    "winter-smog",
+    "aqi",
+    "iaq",
+    "corsi-rosenthal",
+    "carbon-abatement",
+    "gemini-ai",
+    "hack2skill"
+  ],
+  "author": "Vishwajeet Kumar",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
