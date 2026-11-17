@@ -3,7 +3,7 @@
 > **Event:** Hack2Skill — Build with AI: PromptWars (Bhopal Edition)  
 > **Challenge:** [Challenge 6] Urban Air Quality Assistant  
 > **Engineered Target Score:** 98+ / 100  
-> **Author:** Vishwajeet Kumar ([@VishwajeetCSE](https://github.com/VishwajeetCSE))  
+> **Author:** Vishwajeet Kumar ([@Vishwajeet](https://github.com/Vishwajeet))  
 > **Live Repository:** [https://github.com/VishwajeetCSE/Urban-Air-Quality-Assistant](https://github.com/VishwajeetCSE/Urban-Air-Quality-Assistant)
 
 ---
