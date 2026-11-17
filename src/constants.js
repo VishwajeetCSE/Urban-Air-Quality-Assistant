@@ -1,308 +1,326 @@
 /**
- * SmogGuard AI — Constants & Domain Reference Data
- * Engineered for Indian Urban Winter Smog (CPCB NAQI Standards & Atmospheric Inversion Models)
+ * @fileoverview Domain Constants, AQI Breakpoints, Archetypes, and DIY IAQ Catalogs
+ * @module constants
+ * @author Vishwajeet Kumar
+ * @license MIT
  */
 
-export const CITIES = {
+/**
+ * CPCB Indian National Air Quality Index (NAQI) Breakpoints for Major Pollutants
+ * Values in ug/m3 (24-hour average for PM2.5, PM10, NO2; 8-hour average for O3)
+ */
+export const AQI_BREAKPOINTS = {
+  pm25: [
+    { minC: 0, maxC: 30, minI: 0, maxI: 50, label: 'Good', color: '#00e400', class: 'aqi-good' },
+    { minC: 30.1, maxC: 60, minI: 51, maxI: 100, label: 'Satisfactory', color: '#92d050', class: 'aqi-satisfactory' },
+    { minC: 60.1, maxC: 90, minI: 101, maxI: 200, label: 'Moderate', color: '#ffd700', class: 'aqi-moderate' },
+    { minC: 90.1, maxC: 120, minI: 201, maxI: 300, label: 'Poor', color: '#ff7e00', class: 'aqi-poor' },
+    { minC: 120.1, maxC: 250, minI: 301, maxI: 400, label: 'Very Poor', color: '#ff0000', class: 'aqi-very-poor' },
+    { minC: 250.1, maxC: 500, minI: 401, maxI: 500, label: 'Severe', color: '#7e0023', class: 'aqi-severe' }
+  ],
+  pm10: [
+    { minC: 0, maxC: 50, minI: 0, maxI: 50, label: 'Good', color: '#00e400' },
+    { minC: 50.1, maxC: 100, minI: 51, maxI: 100, label: 'Satisfactory', color: '#92d050' },
+    { minC: 100.1, maxC: 250, minI: 101, maxI: 200, label: 'Moderate', color: '#ffd700' },
+    { minC: 250.1, maxC: 350, minI: 201, maxI: 300, label: 'Poor', color: '#ff7e00' },
+    { minC: 350.1, maxC: 430, minI: 301, maxI: 400, label: 'Very Poor', color: '#ff0000' },
+    { minC: 430.1, maxC: 600, minI: 401, maxI: 500, label: 'Severe', color: '#7e0023' }
+  ],
+  no2: [
+    { minC: 0, maxC: 40, minI: 0, maxI: 50, label: 'Good', color: '#00e400' },
+    { minC: 40.1, maxC: 80, minI: 51, maxI: 100, label: 'Satisfactory', color: '#92d050' },
+    { minC: 80.1, maxC: 180, minI: 101, maxI: 200, label: 'Moderate', color: '#ffd700' },
+    { minC: 180.1, maxC: 280, minI: 201, maxI: 300, label: 'Poor', color: '#ff7e00' },
+    { minC: 280.1, maxC: 400, minI: 301, maxI: 400, label: 'Very Poor', color: '#ff0000' },
+    { minC: 400.1, maxC: 800, minI: 401, maxI: 500, label: 'Severe', color: '#7e0023' }
+  ],
+  o3: [
+    { minC: 0, maxC: 50, minI: 0, maxI: 50, label: 'Good', color: '#00e400' },
+    { minC: 50.1, maxC: 100, minI: 51, maxI: 100, label: 'Satisfactory', color: '#92d050' },
+    { minC: 100.1, maxC: 168, minI: 101, maxI: 200, label: 'Moderate', color: '#ffd700' },
+    { minC: 168.1, maxC: 208, minI: 201, maxI: 300, label: 'Poor', color: '#ff7e00' },
+    { minC: 208.1, maxC: 748, minI: 301, maxI: 400, label: 'Very Poor', color: '#ff0000' },
+    { minC: 748.1, maxC: 1000, minI: 401, maxI: 500, label: 'Severe', color: '#7e0023' }
+  ]
+};
+
+/**
+ * 3 Primary Household & Community Archetypes
+ */
+export const ARCHETYPES = {
+  apartment_family: {
+    id: 'apartment_family',
+    title: 'Urban Apartment Family',
+    subTitle: 'Kids + Elderly at Home',
+    icon: '🏢',
+    description: 'High-density residential flat with shared ventilation, vulnerable dependents, and elevator shaft drafts.',
+    baseInfiltration: 0.45,
+    minuteVentilation: 0.012, // m3/min average
+    vulnerabilityWeight: 2.2,
+    defaultRoomSqFt: 350,
+    primaryFocal: 'Indoor HEPA/Corsi-Rosenthal filtration, safe playground hours, child school commute safety.'
+  },
+  daily_commuter: {
+    id: 'daily_commuter',
+    title: 'Daily Commuter & Professional',
+    subTitle: 'High Outdoor Transit Exposure',
+    icon: '🚲',
+    description: 'Spends 2-4 hours daily in active transit across congested road corridors with heavy diesel exhaust.',
+    baseInfiltration: 0.60,
+    minuteVentilation: 0.035, // m3/min during exertion/walking
+    vulnerabilityWeight: 1.8,
+    defaultRoomSqFt: 250,
+    primaryFocal: 'Transit route optimization, N95 respirators, in-cabin AC recirculation, carpool swaps.'
+  },
+  society_resident: {
+    id: 'society_resident',
+    title: 'Housing Society / Community Resident',
+    subTitle: 'Collective RWA Action & Neighborhood Impact',
+    icon: '🏘️',
+    description: 'Focuses on multi-family collective mitigation, shared diesel generator policies, anti-smog water misting, and leaf composting.',
+    baseInfiltration: 0.50,
+    minuteVentilation: 0.015,
+    vulnerabilityWeight: 1.6,
+    defaultRoomSqFt: 500,
+    primaryFocal: 'Zero-idle gates, DG genset curfew, leaf composting pits, community clean air advisory.'
+  }
+};
+
+/**
+ * Vulnerability Factors
+ */
+export const VULNERABILITY_FACTORS = {
+  asthma: { id: 'asthma', label: 'Asthma / COPD / Respiratory', weight: 2.5, criticalThreshold: 30 },
+  infants: { id: 'infants', label: 'Infants & Toddlers (< 5 yrs)', weight: 2.3, criticalThreshold: 25 },
+  seniors: { id: 'seniors', label: 'Senior Citizens (65+ yrs)', weight: 2.0, criticalThreshold: 35 },
+  pregnant: { id: 'pregnant', label: 'Expectant Mothers', weight: 2.1, criticalThreshold: 30 }
+};
+
+/**
+ * Commute Modes and Carbon Emission Factors (kg CO2e per passenger km)
+ */
+export const COMMUTE_MODES = {
+  metro: { id: 'metro', name: 'Metro / Rapid Rail', ef: 0.020, pmRisk: 'Low (Filtered Cabin)' },
+  bus: { id: 'bus', name: 'Electric / CNG Bus', ef: 0.035, pmRisk: 'Moderate' },
+  two_wheeler: { id: 'two_wheeler', name: 'Petrol Motorcycle / Scooter', ef: 0.062, pmRisk: 'Very High (Direct Inhalation)' },
+  car: { id: 'car', name: 'Solo Petrol / Diesel Car', ef: 0.175, pmRisk: 'Moderate (If Recirculate ON)' },
+  carpool: { id: 'carpool', name: 'Shared Carpool (3+ Persons)', ef: 0.058, pmRisk: 'Moderate' },
+  cycle_walk: { id: 'cycle_walk', name: 'Walking / Bicycling', ef: 0.000, pmRisk: 'High during smog; Great in safe window' }
+};
+
+/**
+ * Benchmark Indian Urban Smog Hotspots
+ */
+export const HOTSPOT_CITIES = {
   delhi: {
+    id: 'delhi',
     name: 'Delhi-NCR',
     state: 'Delhi',
+    baseAQI: 385,
     basePM25: 280,
     inversionFactor: 1.85,
-    description: 'Severe winter smog zone (Surface radiation inversion & transboundary smoke)',
-    lat: 28.6139,
-    lon: 77.2090
+    description: 'Gangetic cold pool trap with severe agricultural smoke and vehicular boundary inversion.'
   },
   bhopal: {
+    id: 'bhopal',
     name: 'Bhopal',
     state: 'Madhya Pradesh',
+    baseAQI: 315,
     basePM25: 145,
     inversionFactor: 1.40,
-    description: 'Central plateau valley trap with morning cold fog and vehicular accumulation',
-    lat: 23.2599,
-    lon: 77.4126
+    description: 'Central plateau valley trap with morning radiational fog and vehicular accumulation.'
   },
   patna: {
+    id: 'patna',
     name: 'Patna',
     state: 'Bihar',
-    basePM25: 240,
+    baseAQI: 395,
+    basePM25: 245,
     inversionFactor: 1.75,
-    description: 'Gangetic plains heavy river basin inversion and cold pool trap',
-    lat: 25.5941,
-    lon: 85.1376
+    description: 'Dense river basin thermal inversion with low wind dispersal speeds.'
   },
   lucknow: {
+    id: 'lucknow',
     name: 'Lucknow',
     state: 'Uttar Pradesh',
-    basePM25: 210,
+    baseAQI: 365,
+    basePM25: 215,
     inversionFactor: 1.65,
-    description: 'Gangetic urban core with heavy nocturnal radiation inversion',
-    lat: 26.8467,
-    lon: 80.9462
+    description: 'Dense urban core with morning ground-level haze and nocturnal radiation inversions.'
   },
   kolkata: {
+    id: 'kolkata',
     name: 'Kolkata',
     state: 'West Bengal',
-    basePM25: 175,
+    baseAQI: 340,
+    basePM25: 180,
     inversionFactor: 1.50,
-    description: 'Coastal-plain boundary layer compression with high humidity smog',
-    lat: 22.5726,
-    lon: 88.3639
-  },
-  jaipur: {
-    name: 'Jaipur',
-    state: 'Rajasthan',
-    basePM25: 155,
-    inversionFactor: 1.45,
-    description: 'Semi-arid basin with mineral dust resuspension and night temperature drops',
-    lat: 26.9124,
-    lon: 75.7873
+    description: 'Coastal-plain boundary layer compression with high humidity and soot.'
   },
   mumbai: {
+    id: 'mumbai',
     name: 'Mumbai',
     state: 'Maharashtra',
-    basePM25: 110,
+    baseAQI: 265,
+    basePM25: 115,
     inversionFactor: 1.25,
-    description: 'Coastal breeze transition zone with morning construction and transit haze',
-    lat: 19.0760,
-    lon: 72.8777
+    description: 'Coastal breeze transition zone with morning construction dust and diesel haze.'
+  },
+  jaipur: {
+    id: 'jaipur',
+    name: 'Jaipur',
+    state: 'Rajasthan',
+    baseAQI: 325,
+    basePM25: 160,
+    inversionFactor: 1.45,
+    description: 'Semi-arid basin with mineral dust resuspension and sharp winter temperature drops.'
   },
   bengaluru: {
+    id: 'bengaluru',
     name: 'Bengaluru',
     state: 'Karnataka',
-    basePM25: 55,
+    baseAQI: 95,
+    basePM25: 58,
     inversionFactor: 1.15,
-    description: 'High-altitude plateau with mild winter micro-inversion in valley corridors',
-    lat: 12.9716,
-    lon: 77.5946
-  }
-};
-
-export const HOUSING_TYPES = {
-  apartment: {
-    id: 'apartment',
-    name: 'Apartment (Mid/High-Rise)',
-    infiltrationRate: 0.45, // 45% of outdoor PM2.5 penetrates unsealed windows/balconies
-    description: 'Elevated floors receive less coarse dust, but fine PM2.5 infiltrates through elevator shafts and balcony drafts.',
-    icon: '🏢'
-  },
-  house: {
-    id: 'house',
-    name: 'Independent House (G+1/G+2)',
-    infiltrationRate: 0.65, // 65% penetration from ground-level boundary layer
-    description: 'Direct ground-level exposure to street dust, garden leaf smoke, and vehicular cold-starts.',
-    icon: '🏡'
-  },
-  slum: {
-    id: 'slum',
-    name: 'Informal Settlement / Dense Low-Rise',
-    infiltrationRate: 0.88, // 88% penetration due to unsealed tin roofs & shared walls
-    description: 'High vulnerability: direct proximity to chulha/biomass fires and limited weather-stripping.',
-    icon: '🏘️'
-  }
-};
-
-export const PERSONA_ARCHETYPES = {
-  infant: {
-    id: 'infant',
-    name: 'Infants & Expectant Mothers',
-    badge: '👶 High Lung Permeability',
-    minuteVentilation: 0.008, // m3/min
-    vulnerabilityWeight: 2.5,
-    safeThresholdPM25: 25, // ug/m3
-    priorityAdvice: 'Underdeveloped alveolar blood-gas barrier. Strict indoor air filtration; avoid morning outings.',
-    focusTimes: ['06:00-10:00', '19:00-22:00']
-  },
-  school_child: {
-    id: 'school_child',
-    name: 'School-Age Children',
-    badge: '🎒 Morning Commute & Recess',
-    minuteVentilation: 0.012, // m3/min
-    vulnerabilityWeight: 2.0,
-    safeThresholdPM25: 45,
-    priorityAdvice: 'Peak exposure at morning school bus stop. Reschedule sports practice to afternoon solar window (12-3 PM).',
-    focusTimes: ['07:00-09:00', '14:00-16:00']
-  },
-  elderly_asthma: {
-    id: 'elderly_asthma',
-    name: 'Elderly & Chronic Respiratory / Asthma / COPD',
-    badge: '🧓 Bronchospasm & Cardiac Risk',
-    minuteVentilation: 0.015, // m3/min
-    vulnerabilityWeight: 2.8,
-    safeThresholdPM25: 30,
-    priorityAdvice: 'Cold dry smog triggers acute airway constriction. Zero outdoor morning walks before 11:30 AM.',
-    focusTimes: ['05:30-09:30', '18:30-22:00']
-  },
-  commuter: {
-    id: 'commuter',
-    name: 'Outdoor Commuters & Gig Workers',
-    badge: '🚲 High-Inhalation Transit',
-    minuteVentilation: 0.035, // m3/min during exertion
-    vulnerabilityWeight: 1.8,
-    safeThresholdPM25: 60,
-    priorityAdvice: 'Active physical exertion increases minute ventilation 2.5x. Use certified N95/FFP2 masks with tight seal.',
-    focusTimes: ['08:00-10:30', '18:00-20:30']
-  },
-  rwa_community: {
-    id: 'rwa_community',
-    name: 'Housing Society & RWA Leaders',
-    badge: '🏘️ Collective Community Action',
-    minuteVentilation: 0.015, // m3/min
-    vulnerabilityWeight: 1.5,
-    safeThresholdPM25: 50,
-    priorityAdvice: 'Coordinate community solutions: zero-idle zones at gates, DG genset curfew, leaf composting.',
-    focusTimes: ['07:00-11:00', '18:00-22:00']
+    description: 'High-altitude plateau with moderate micro-inversion in traffic corridors.'
   }
 };
 
 /**
- * Atmospheric Diurnal Smog Inversion Curve (Hour 0 to 23)
- * Derived from CPCB and meteorological boundary layer studies in Northern India.
- * Reflects nocturnal surface cooling, radiation inversion traps, and solar convective mixing.
+ * Diurnal Hourly Winter Inversion Curve Multipliers (Hour 0 to 23)
+ * Calibrated against atmospheric boundary layer data in northern India.
  */
-export const DIURNAL_INVERSION_MULTIPLIERS = [
-  1.30, // 00:00 - Night inversion deepening
-  1.35, // 01:00
-  1.40, // 02:00
-  1.45, // 03:00 - Maximum radiative cooling
-  1.52, // 04:00
-  1.65, // 05:00 - Cold air pool at ground level
-  1.82, // 06:00 - Sunrise inversion trap + morning cold start emissions
-  1.95, // 07:00 - PEAK MORNING SMOG TRAP
-  1.90, // 08:00 - Heavy morning commute rush trapped under low boundary layer
-  1.60, // 09:00 - Sun begins warming ground
-  1.25, // 10:00 - Inversion layer begins breaking up
-  0.95, // 11:00 - Convective mixing starts
-  0.72, // 12:00 - SOLAR VENTILATION WINDOW OPENS
-  0.65, // 13:00 - LOWEST DIURNAL PM2.5 (Maximum planetary boundary layer height)
-  0.68, // 14:00 - Optimal window for ventilation, sports, errands
-  0.78, // 15:00 - Solar ventilation window closing
-  0.98, // 16:00 - Late afternoon cooling
-  1.25, // 17:00 - Sunset, boundary layer rapidly compresses
-  1.55, // 18:00 - Evening commute emissions trapped
-  1.78, // 19:00 - PEAK EVENING SMOG ACCUMULATION
-  1.85, // 20:00 - Cooking smoke, heating fires, commercial traffic
-  1.75, // 21:00 - Continued night trapping
-  1.55, // 22:00 - Traffic diminishes, stable inversion holds
-  1.40  // 23:00
+export const DIURNAL_SMOG_CURVE = [
+  1.32, 1.36, 1.42, 1.48, 1.55, 1.68, // 00:00 - 05:00: Deepening nocturnal radiation inversion
+  1.84, 1.96, 1.88, 1.58, // 06:00 - 09:00: CRITICAL MORNING SMOG TRAP (Rush hour + lowest boundary layer)
+  1.22, 0.96, // 10:00 - 11:00: Solar warming lifts inversion lid
+  0.70, 0.64, 0.68, 0.76, // 12:00 - 15:00: CONVECTIVE SOLAR VENTILATION WINDOW (Safest outdoor hours)
+  0.98, 1.24, // 16:00 - 17:00: Late afternoon cooling & sunset collapse
+  1.56, 1.80, 1.86, 1.74, // 18:00 - 21:00: SECONDARY EVENING ACCUMULATION (Cooking smoke + rush hour)
+  1.52, 1.38 // 22:00 - 23:00: Stable nocturnal inversion holds
 ];
 
 /**
- * CPCB Indian National Air Quality Index (NAQI) Breakpoints for PM2.5 (24-hr average in ug/m3)
+ * Practical DIY Indoor Air Quality (IAQ) Hacks
  */
-export const CPCB_NAQI_BREAKPOINTS = [
-  { minPM: 0, maxPM: 30, minAQI: 0, maxAQI: 50, label: 'Good', color: '#00e400', class: 'aqi-good' },
-  { minPM: 30.1, maxPM: 60, minAQI: 51, maxAQI: 100, label: 'Satisfactory', color: '#92d050', class: 'aqi-satisfactory' },
-  { minPM: 60.1, maxPM: 90, minAQI: 101, maxAQI: 200, label: 'Moderate', color: '#ffff00', class: 'aqi-moderate' },
-  { minPM: 90.1, maxPM: 120, minAQI: 201, maxAQI: 300, label: 'Poor', color: '#ff7e00', class: 'aqi-poor' },
-  { minPM: 120.1, maxPM: 250, minAQI: 301, maxAQI: 400, label: 'Very Poor', color: '#ff0000', class: 'aqi-very-poor' },
-  { minPM: 250.1, maxPM: 500, minAQI: 401, maxAQI: 500, label: 'Severe', color: '#7e0023', class: 'aqi-severe' }
-];
-
-export const IAQ_HACKS_CATALOG = [
+export const DIY_IAQ_HACKS = [
   {
     id: 'corsi_rosenthal',
-    name: 'Corsi-Rosenthal Box (DIY HEPA/MERV13 Purifier)',
-    reduction: 0.75, // 75% reduction in indoor PM2.5
-    costRatio: 0.18, // 18% of commercial purifier cost
-    description: 'Box fan + 4-5 MERV13 / HEPA filters taped into a cube with a cardboard shroud. Delivers 500+ CFM CADR at ₹4,000.',
-    tag: 'Highest Impact',
-    icon: '🌀'
+    name: 'DIY Corsi-Rosenthal Box Purifier',
+    tag: 'Highest CADR',
+    reduction: 0.75, // 75% indoor PM2.5 reduction
+    costINR: 4200,
+    commercialEquivINR: 28000,
+    description: 'A 20-inch box fan paired with 4 MERV-13 filters and a cardboard shroud creates 550+ CFM CADR at 1/6th the cost of commercial purifiers.',
+    steps: [
+      'Tape 4 MERV-13 / HEPA filters into a square cube with airflow pointing inwards.',
+      'Place the 20" box fan on top, blowing upwards away from the box.',
+      'Cut a cardboard circular shroud on top of the fan to eliminate blade-tip vortex backflow.',
+      'Seal all seams and bottom cardboard floor with duct tape.'
+    ]
+  },
+  {
+    id: 'window_sealing',
+    name: 'Acoustic & Weatherstrip Draft Sealing',
+    tag: 'Budget Shield',
+    reduction: 0.20,
+    costINR: 350,
+    commercialEquivINR: 2500,
+    description: 'Apply silicone foam weatherstripping tapes to exterior sliding door gaps and deploy door snakes along exterior thresholds.',
+    steps: [
+      'Clean window and door sills with rubbing alcohol.',
+      'Apply self-adhesive EPDM rubber foam tape along window frames.',
+      'Roll a damp towel or weighted fabric door-snake at the bottom of main entrance doors.'
+    ]
   },
   {
     id: 'wet_mopping',
-    name: 'Wet-Mopping Over Dry Broom Sweeping',
-    reduction: 0.25, // 25% reduction
-    costRatio: 0.02,
-    description: 'Dry brooms resuspend 60-80% of settled fine PM2.5 into breathing height. Wet microfibre mopping locks particulates.',
-    tag: 'Zero Cost',
-    icon: '🧹'
+    name: 'Microfibre Wet-Mopping Protocol',
+    tag: 'Zero Cost Habit',
+    reduction: 0.25,
+    costINR: 150,
+    commercialEquivINR: 4000,
+    description: 'Dry broom sweeping resuspends 70% of settled fine particles (PM2.5/PM10) straight into alveolar breathing zones. Wet-mopping traps them instantly.',
+    steps: [
+      'Never dry sweep during winter smog season.',
+      'Mop hard floors with a damp microfibre mop once in the morning and once before bedtime.',
+      'Wipe electronics and tabletops with damp electrostatic cloths.'
+    ]
   },
   {
     id: 'kitchen_exhaust',
-    name: 'Exhaust Fan & Covered Lid Protocol',
-    reduction: 0.20,
-    costRatio: 0.05,
-    description: 'Turn on exhaust 2 min before gas ignition; keep pots covered to prevent oil vaporization that spikes indoor PM2.5 to 800+ ug/m3.',
-    tag: 'Daily Habit',
-    icon: '🍳'
+    name: 'Kitchen Exhaust Pre-Purge & Lidded Cooking',
+    tag: 'Cooking Protocol',
+    reduction: 0.22,
+    costINR: 0,
+    commercialEquivINR: 0,
+    description: 'Frying spices and unvented gas burners release volatile organic compounds and PM2.5 up to 800 µg/m³. Pre-exhaust clears it before accumulation.',
+    steps: [
+      'Turn on kitchen exhaust fan 2 minutes BEFORE lighting the gas stove or induction.',
+      'Keep cookware lidded to prevent aerosolized oil droplets.',
+      'Keep kitchen doors closed to prevent smoke migration into living and sleeping chambers.'
+    ]
   },
   {
-    id: 'draft_sealing',
-    name: 'Door Snake & Window Weatherstripping',
-    reduction: 0.15,
-    costRatio: 0.08,
-    description: 'Seal the 1-2 cm gap below exterior doors and window joints using foam strips or rolled towels during inversion hours.',
-    tag: 'Quick Fix',
-    icon: '🚪'
-  },
-  {
-    id: 'botanical_filters',
-    name: 'Botanical Phytoremediation (NASA Clean Air Plants)',
-    reduction: 0.10,
-    costRatio: 0.12,
-    description: 'Snake Plants (night O2), Areca Palm, and Spider Plants actively absorb VOCs and transpire clean humidity.',
+    id: 'phytoremediation',
+    name: 'NASA Botanical Phytoremediation Roster',
     tag: 'Bio-Filter',
-    icon: '🪴'
+    reduction: 0.12,
+    costINR: 1200,
+    commercialEquivINR: 6000,
+    description: 'Living bio-filters absorb VOCs (benzene, formaldehyde) and transpire clean humidity that settles suspended micro-dust.',
+    plants: [
+      { name: 'Snake Plant (Sansevieria)', role: 'Nighttime CAM O2 release (ideal for bedrooms)', care: 'Low water' },
+      { name: 'Areca Palm', role: 'Daytime humidity transpiring (settles particulate dust)', care: 'Bright indirect light' },
+      { name: 'Spider Plant', role: 'Carbon monoxide and formaldehyde removal', care: 'Resilient' },
+      { name: 'Golden Pothos (Money Plant)', role: 'Xylene absorption and leaf particulate interception', care: 'Easy' }
+    ]
   },
   {
-    id: 'no_incense',
-    name: 'Cessation of Agarbatti & Mosquito Coils',
-    reduction: 0.35, // Removes massive internal spike
-    costRatio: 0.0,
-    description: 'A single burning agarbatti emits 200-400 ug/m3 of PM2.5 and benzene inside closed rooms. Switch to electric diffusers or LED lamps.',
-    tag: 'Crucial',
-    icon: '🕯️'
+    id: 'incense_ban',
+    name: 'Cessation of Incense (Agarbatti) & Coils',
+    tag: 'Critical Cessation',
+    reduction: 0.35,
+    costINR: 0,
+    commercialEquivINR: 0,
+    description: 'A single burning agarbatti emits 250-450 µg/m³ of particulate matter and polycyclic aromatic hydrocarbons in closed rooms.',
+    steps: [
+      'Replace burning agarbatti / dhoop with non-thermal electric reed diffusers or LED pooja lamps.',
+      'Replace mosquito coils (which equal ~100 cigarettes in PM2.5 load) with window mesh screens and plug-in electric liquid vaporizers.'
+    ]
   }
 ];
 
-export const NASA_PLANTS = [
+/**
+ * Community Smog Shield & Citizen Action Plan
+ */
+export const COMMUNITY_SHIELD_PROTOCOLS = [
   {
-    name: 'Snake Plant (Sansevieria)',
-    nickname: "Mother-in-Law's Tongue",
-    role: 'Night Oxygen & Benzene Removal',
-    pathway: 'CAM Photosynthesis (Emits O2 at night, perfect for bedrooms)',
-    careLevel: 'Very Low (Needs water once every 2 weeks)'
+    id: 'zero_idle',
+    title: 'Zero-Idling Gate Zone Enforcement',
+    scope: 'Society Gates & School Drop-offs',
+    impact: 'Prevents localized 500+ µg/m³ diesel soot spikes where children assemble.',
+    action: 'Security guards to instruct school vans, delivery vehicles, and cabs to kill engines if stopped for > 30 seconds.'
   },
   {
-    name: 'Areca Palm (Dypsis lutescens)',
-    nickname: 'Butterfly Palm',
-    role: 'Natural Humidifier & Toluene Filter',
-    pathway: 'Transpires 1 liter of moisture per 24 hours, settling airborne dust',
-    careLevel: 'Medium (Bright indirect light)'
+    id: 'dg_curfew',
+    title: 'Diesel Generator (DG) Rationalization & Battery Banking',
+    scope: 'Society Infrastructure',
+    impact: 'Reduces up to 80 kg CO2e and high sulfur particulates per power-cut hour.',
+    action: 'Restrict DG usage strictly to emergency lifts and water pumps; prohibit aesthetic garden lighting on DG power.'
   },
   {
-    name: 'Spider Plant (Chlorophytum comosum)',
-    nickname: 'Air Ribbon',
-    role: 'Formaldehyde & Carbon Monoxide Absorber',
-    pathway: 'High stomatal conductance; resilient to high winter smog',
-    careLevel: 'Low (Forgiving, thrives indoors)'
+    id: 'leaf_compost',
+    title: 'Ban on Waste & Garden Leaf Burning',
+    scope: 'Horticulture & Common Grounds',
+    impact: 'Avoids 1.4 kg CO2e and 18g of toxic PM2.5 per kg of dry leaves.',
+    action: 'Construct on-site compost pits for sweepings and dry foliage; incentivize gardening staff with composting bonuses.'
   },
   {
-    name: 'Money Plant (Golden Pothos)',
-    nickname: "Devil's Ivy",
-    role: 'Xylene & Particulate Interception',
-    pathway: 'Large waxy leaf surface collects micro-dust; wipe weekly',
-    careLevel: 'Very Low (Grows in water or soil)'
+    id: 'water_misting',
+    title: 'Anti-Smog Boundary Water Misting',
+    scope: 'Internal Society Roads & Perimeters',
+    impact: 'Suppresses 30-40% of resuspended road dust and particulate matter.',
+    action: 'Use recycled STP water via spray hoses along boundary fences between 7 AM - 9 AM and 5 PM - 7 PM.'
   }
 ];
-
-export const SUSTAINABLE_SWAPS = {
-  transit: {
-    ice_petrol_car: { name: 'Solo Petrol Car/SUV', ef: 0.17 }, // kg CO2e / passenger km
-    ice_diesel_car: { name: 'Solo Diesel Car/SUV', ef: 0.19 },
-    two_wheeler_petrol: { name: 'Petrol Motorcycle/Scooter', ef: 0.06 },
-    metro_train: { name: 'Metro Rail / Rapid Rail', ef: 0.02 },
-    electric_bus: { name: 'Electric Bus / EV Carpool', ef: 0.028 },
-    cycle_walk: { name: 'Bicycle / Walking (Afternoon Window)', ef: 0.00 }
-  },
-  heating: {
-    biomass_angithi: { name: 'Wood / Charcoal Angithi / Coal Fire', co2PerMonth: 65, pmRisk: 'Extreme (800+ ug/m3)' },
-    unvented_gas_heater: { name: 'LPG / Gas Space Heater', co2PerMonth: 38, pmRisk: 'High NO2/CO' },
-    oil_radiator: { name: 'Electric Oil-Filled Radiator / BLDC Heat Pump', co2PerMonth: 18, pmRisk: 'Zero Indoor PM' }
-  },
-  waste: {
-    leaf_burning: { name: 'Open Leaf / Trash Burning', co2PerKg: 1.4, pm25EmittedPerKg: 18.0 },
-    leaf_composting: { name: 'Community Composting Pit / Mulching', co2PerKg: 0.1, pm25EmittedPerKg: 0.0 }
-  }
-};

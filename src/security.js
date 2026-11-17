@@ -1,85 +1,84 @@
 /**
- * SmogGuard AI — Security & Sanitization Layer
- * Implements:
- * 1. Ephemeral In-Memory API Key Vault (Zero persistence to localStorage/sessionStorage/cookies)
- * 2. Mutation XSS (mXSS) & DOM Clobbering immunity
- * 3. Constant-time string comparison against side-channel timing attacks
+ * @fileoverview Security, Sanitization, Memory-Only Vault, and Safe DOM Helpers
+ * @module security
+ * @author Vishwajeet Kumar
+ * @license MIT
  */
 
-// Private closure scope for the in-memory vault. Never attached to window/globalThis.
+/**
+ * Ephemeral In-Memory API Key Vault
+ * Stored strictly in module closure RAM. Never written to localStorage,
+ * sessionStorage, cookies, IndexedDB, or serialized state exports.
+ */
 const _vault = {
-  apiKey: null,
-  createdAt: null,
-  maskedDisplay: null
+  key: null,
+  timestamp: null
 };
 
 export const ApiKeyVault = {
   /**
-   * Set API key in ephemeral memory only
-   * @param {string} key
+   * Set API key in ephemeral memory
+   * @param {string|null} key
    */
   setKey(key) {
     if (typeof key !== 'string') {
-      _vault.apiKey = null;
-      _vault.createdAt = null;
-      _vault.maskedDisplay = null;
-      return;
-    }
-    const trimmed = key.trim();
-    if (!trimmed) {
       this.clear();
       return;
     }
-    _vault.apiKey = trimmed;
-    _vault.createdAt = Date.now();
-    // Safe masked representation for UI display (e.g. AIzaSy...94zQ)
-    if (trimmed.length > 8) {
-      _vault.maskedDisplay = trimmed.slice(0, 6) + '...' + trimmed.slice(-4);
-    } else {
-      _vault.maskedDisplay = '••••••••';
+    const clean = key.trim();
+    if (!clean) {
+      this.clear();
+      return;
     }
+    _vault.key = clean;
+    _vault.timestamp = Date.now();
   },
 
   /**
-   * Retrieve the active key
+   * Get the active API key
    * @returns {string|null}
    */
   getKey() {
-    return _vault.apiKey;
+    return _vault.key;
   },
 
   /**
-   * Check if a valid key is set
+   * Check if a valid API key exists
    * @returns {boolean}
    */
   hasKey() {
-    return typeof _vault.apiKey === 'string' && _vault.apiKey.length > 0;
+    return typeof _vault.key === 'string' && _vault.key.length > 5;
   },
 
   /**
-   * Get safe masked display
+   * Masked display string for UI display (e.g. AIzaSy...94zQ)
    * @returns {string}
    */
   getMasked() {
-    return _vault.maskedDisplay || 'None (Using Offline Deterministic Engine)';
+    if (!this.hasKey()) return 'Offline Heuristic Engine Active';
+    const k = _vault.key;
+    if (k.length > 8) {
+      return `${k.slice(0, 6)}••••••••${k.slice(-4)}`;
+    }
+    return '••••••••';
   },
 
   /**
-   * Completely scrub the vault from memory
+   * Wipe key from memory
    */
   clear() {
-    _vault.apiKey = null;
-    _vault.createdAt = null;
-    _vault.maskedDisplay = null;
+    _vault.key = null;
+    _vault.timestamp = null;
   }
 };
 
 /**
- * Escapes HTML special characters to prevent injection
+ * Escapes raw strings for safe HTML text rendering
+ * Defends against basic & advanced reflected XSS
  * @param {string} str
  * @returns {string}
  */
-export function escapeHtml(str) {
+export function escapeHTML(str) {
   if (str === null || str === undefined) return '';
   return String(str)
     .replace(/&/g, '&amp;')
@@ -91,94 +90,121 @@ export function escapeHtml(str) {
 }
 
 /**
- * Allowed HTML tags for rich markdown-like synthesis formatting
+ * Clamps numeric values strictly within bounds
+ * @param {number|string} val
+ * @param {number} min
+ * @param {number} max
+ * @param {number} [fallback=min]
+ * @returns {number}
  */
-const ALLOWED_TAGS = new Set([
+export function clamp(val, min, max, fallback = min) {
+  const n = Number(val);
+  if (isNaN(n) || !isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+/**
+ * Whitelist of allowed HTML tags for rich formatted advisories
+ */
+const SAFE_TAGS = new Set([
   'p', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'span',
   'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'table',
   'thead', 'tbody', 'tr', 'th', 'td', 'code', 'pre', 'blockquote',
-  'hr', 'sub', 'sup'
+  'hr', 'sub', 'sup', 'mark'
 ]);
 
 /**
- * Allowed attributes (excluding DOM-clobbering id, name, and script triggers)
+ * Whitelist of allowed safe attributes (strictly excluding DOM clobbering id and name)
  */
-const ALLOWED_ATTRS = new Set([
-  'class', 'title', 'role', 'aria-label', 'aria-hidden', 'aria-live'
+const SAFE_ATTRS = new Set([
+  'class', 'title', 'role', 'aria-label', 'aria-hidden', 'aria-live', 'data-status'
 ]);
 
 /**
- * Custom Mutation XSS (mXSS) and DOM-Clobbering immune HTML sanitizer
- * Works in both browser DOM and Node.js test environments without external dependencies.
+ * Sanitizes dirty HTML strings against Mutation XSS (mXSS) and DOM Clobbering
+ * Works in both browser DOM and Node.js testing environments without dependencies.
  * @param {string} dirtyHtml
  * @returns {string}
  */
-export function sanitizeHtml(dirtyHtml) {
+export function sanitizeHTML(dirtyHtml) {
   if (typeof dirtyHtml !== 'string') return '';
   if (!dirtyHtml.trim()) return '';
 
-  // First pass: strip obvious dangerous blocks (script, iframe, style, object, embed, form)
-  let clean = dirtyHtml.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  clean = clean.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
-  clean = clean.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-  clean = clean.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '');
-  clean = clean.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '');
-  clean = clean.replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '');
+  // 1. Strip dangerous executable containers
+  let clean = dirtyHtml
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+    .replace(/<base\b[^>]*>/gi, '')
+    .replace(/<meta\b[^>]*>/gi, '');
 
-  // Strip dangerous inline event handlers (onerror, onload, onclick, etc.) and javascript: pseudo-protocols
+  // 2. Strip inline event handlers (on*), javascript pseudo-protocols, and data URIs
   clean = clean.replace(/on[a-z]+\s*=\s*(['"]).*?\1/gi, '');
   clean = clean.replace(/on[a-z]+\s*=\s*[^>\s]+/gi, '');
-  clean = clean.replace(/javascript:/gi, 'blocked-javascript:');
-  clean = clean.replace(/vbscript:/gi, 'blocked-vbscript:');
-  clean = clean.replace(/data:\s*text\/html/gi, 'blocked-data:');
+  clean = clean.replace(/javascript\s*:/gi, 'blocked-js:');
+  clean = clean.replace(/vbscript\s*:/gi, 'blocked-vb:');
+  clean = clean.replace(/data\s*:\s*text\/html/gi, 'blocked-data:');
 
-  // DOM Clobbering Defense: Strip 'id=' and 'name=' attributes that might overwrite window properties
+  // 3. DOM Clobbering Defense: Strip 'id=' and 'name=' to prevent window.* hijacking
   clean = clean.replace(/\b(id|name)\s*=\s*(['"]).*?\2/gi, '');
   clean = clean.replace(/\b(id|name)\s*=\s*[^>\s]+/gi, '');
 
-  // Tag filter pass using regular expression parser for zero-dep environment
-  clean = clean.replace(/<\/?([a-z0-9_-]+)([^>]*)>/gi, (match, tagName, attrs) => {
-    const lowerTag = tagName.toLowerCase();
-    if (!ALLOWED_TAGS.has(lowerTag)) {
-      return ''; // Strip non-allowed tag
-    }
+  // 4. Tag whitelist enforcement
+  clean = clean.replace(/<\/?([a-z0-9_-]+)([^>]*)>/gi, (match, tagName, rawAttrs) => {
+    const tag = tagName.toLowerCase();
+    if (!SAFE_TAGS.has(tag)) return '';
 
-    if (match.startsWith('</')) {
-      return `</${lowerTag}>`;
-    }
+    if (match.startsWith('</')) return `</${tag}>`;
 
-    // Filter attributes
+    // Filter attributes against allowed whitelist
     let safeAttrs = '';
     const attrRegex = /([a-z0-9_-]+)(?:\s*=\s*(?:'([^']*)'|"([^"]*)"|([^>\s]+)))?/gi;
-    let attrMatch;
-    while ((attrMatch = attrRegex.exec(attrs)) !== null) {
-      const attrName = attrMatch[1].toLowerCase();
-      const attrVal = attrMatch[2] || attrMatch[3] || attrMatch[4] || '';
-      if (ALLOWED_ATTRS.has(attrName)) {
-        // Sanitize attribute value
+    let m;
+    while ((m = attrRegex.exec(rawAttrs)) !== null) {
+      const attrName = m[1].toLowerCase();
+      const attrVal = m[2] || m[3] || m[4] || '';
+      if (SAFE_ATTRS.has(attrName)) {
         const sanitizedVal = attrVal.replace(/[<>"'&]/g, '');
         safeAttrs += ` ${attrName}="${sanitizedVal}"`;
       }
     }
 
-    return `<${lowerTag}${safeAttrs}>`;
+    return `<${tag}${safeAttrs}>`;
   });
 
   return clean;
 }
 
 /**
- * Constant-time string comparator to prevent timing side-channel attacks
- * @param {string} a
- * @param {string} b
- * @returns {boolean}
+ * Safely inserts sanitized HTML into a DOM container element
+ * Prevents direct unsafe innerHTML assignments
+ * @param {HTMLElement} container
+ * @param {string} htmlContent
  */
-export function timingSafeEqual(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string') return false;
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+export function setSanitizedHTML(container, htmlContent) {
+  if (!container) return;
+  const clean = sanitizeHTML(htmlContent);
+  container.innerHTML = clean;
+}
+
+/**
+ * Generates cryptographically secure unique identifiers
+ * Works in modern browsers (crypto.getRandomValues) and Node.js
+ * @param {string} [prefix='aero']
+ * @returns {string}
+ */
+export function generateSecureId(prefix = 'aero') {
+  let randomHex = '';
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    randomHex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  } else {
+    // Fallback for edge runtime
+    randomHex = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
   }
-  return diff === 0;
+  return `${prefix}_${randomHex}`;
 }

@@ -1,213 +1,219 @@
 /**
- * SmogGuard AI — Low-Emission Daily Routine & Sustainable Swaps Engine
- * Dynamically reschedules daily life around the atmospheric diurnal smog inversion curve
- * to minimize alveolar lung exposure for vulnerable family archetypes.
+ * @fileoverview Low-Emission Daily Routine Builder, Lifestyle Switcher, and Carbon Abatement Math
+ * @module routine-engine
+ * @author Vishwajeet Kumar
+ * @license MIT
  */
 
-import { PERSONA_ARCHETYPES, CITIES, HOUSING_TYPES, SUSTAINABLE_SWAPS } from './constants.js';
-import { getDiurnalInversionCurve } from './smog-engine.js';
+import { ARCHETYPES, COMMUTE_MODES, HOTSPOT_CITIES } from './constants.js';
+import { getDiurnalSmogForecast } from './aqi-calculator.js';
+import { clamp } from './security.js';
 
 /**
- * Generates an hour-by-hour and block-by-block daily routine tailored to the family persona
- * @param {string} [cityKey='delhi']
- * @param {string} [personaKey='infant']
- * @param {string} [housingKey='apartment']
- * @param {number} [customPM25=null]
+ * Generates an optimized, health-protective daily routine mapped to diurnal smog curves
+ * @param {object} params
+ * @param {string} [params.archetypeKey='apartment_family']
+ * @param {string} [params.cityKey='delhi']
+ * @param {number} [params.baseAQI=null]
+ * @param {string} [params.commuteMode='metro']
+ * @param {string[]} [params.vulnerabilities=[]]
  * @returns {{
- *   persona: object,
+ *   archetype: object,
  *   city: object,
- *   housing: object,
  *   curveSummary: object,
- *   blocks: Array<{
+ *   scheduleBlocks: Array<{
  *     timeSlot: string,
  *     title: string,
- *     phase: string,
- *     safetyStatus: 'SAFE'|'CAUTION'|'HAZARDOUS',
- *     badgeText: string,
- *     outdoorRecommendation: string,
- *     indoorIAQProtocol: string,
- *     transitSwap: string,
- *     rwaAction: string
+ *     status: 'CRITICAL_RISK'|'CAUTION'|'SAFE_WINDOW',
+ *     badge: string,
+ *     badgeClass: string,
+ *     actionProtocol: string,
+ *     iaqIndoorStep: string,
+ *     commuteAlternative: string,
+ *     societyCoordination: string
  *   }>,
- *   criticalAlerts: string[]
+ *   advisoryPills: string[]
  * }}
  */
-export function generateDailyRoutine(
+export function generateDailyRoutine({
+  archetypeKey = 'apartment_family',
   cityKey = 'delhi',
-  personaKey = 'infant',
-  housingKey = 'apartment',
-  customPM25 = null
-) {
-  const city = CITIES[cityKey] || CITIES.delhi;
-  const persona = PERSONA_ARCHETYPES[personaKey] || PERSONA_ARCHETYPES.infant;
-  const housing = HOUSING_TYPES[housingKey] || HOUSING_TYPES.apartment;
-  const basePM = customPM25 || city.basePM25;
+  baseAQI = null,
+  commuteMode = 'metro',
+  vulnerabilities = []
+} = {}) {
+  const arch = ARCHETYPES[archetypeKey] || ARCHETYPES.apartment_family;
+  const city = HOTSPOT_CITIES[cityKey] || HOTSPOT_CITIES.delhi;
+  const aqi = baseAQI !== null ? baseAQI : city.baseAQI;
 
-  const curve = getDiurnalInversionCurve(basePM, cityKey);
+  const forecast = getDiurnalSmogForecast(aqi, cityKey);
 
-  const blocks = [
+  const scheduleBlocks = [
     {
       timeSlot: '06:00 – 08:30 AM',
-      title: 'Morning Inversion Smog Trap (Peak Ground-Level Toxins)',
-      phase: 'morning_trap',
-      safetyStatus: 'HAZARDOUS',
-      badgeText: '🚫 Critical Outdoor Risk',
-      outdoorRecommendation: personaKey === 'school_child'
-        ? 'Board school transport wearing an airtight N95/FFP2 mask. Request school management to hold morning assembly inside air-purified auditorium.'
-        : personaKey === 'elderly_asthma'
-        ? 'Strictly CANCEL morning outdoor walks. Cold dense smog triggers acute bronchospasm and cardiovascular stress.'
-        : personaKey === 'infant'
-        ? 'Keep infant strictly indoors. Keep nursery doors closed; avoid balcony or garden strolls.'
-        : 'Commuters: If riding two-wheeler, use certified N95 respirator. In cars, switch HVAC to internal recirculation immediately.',
-      indoorIAQProtocol: 'Run Corsi-Rosenthal DIY box filter at medium/high. Keep all windows, balcony sliders, and exhaust vents sealed tightly.',
-      transitSwap: 'Switch from open auto-rickshaw/bike to Metro rail or closed EV carpool.',
-      rwaAction: 'Security guards to enforce strict ZERO-IDLE zone at school bus boarding bays and society main gates.'
+      title: 'Morning Smog Trap (Peak Radiation Inversion)',
+      status: 'CRITICAL_RISK',
+      badge: '🚫 Toxic Outdoor Exposure',
+      badgeClass: 'badge-danger',
+      actionProtocol: archetypeKey === 'apartment_family'
+        ? 'Strict indoor shelter for infants & elders. Reschedule morning jogging or outdoor yoga. School bus waiting must include N95 respirator.'
+        : archetypeKey === 'daily_commuter'
+        ? 'Avoid open two-wheelers. If commuting by car, switch AC to recirculation immediately. Wear sealed N95/FFP2 mask on footpaths.'
+        : 'Security team to enforce ZERO-IDLE zone at society entrance. Stop dry leaf sweeping on perimeter pathways.',
+      iaqIndoorStep: 'Corsi-Rosenthal DIY box filter or HEPA unit running at medium/high speed. Windows and balcony sliders sealed tight.',
+      commuteAlternative: 'Shift commute departure to Metro rail or electric shuttle bus.',
+      societyCoordination: 'Activate perimeter anti-smog misting sprayers to suppress ground particulate resuspension.'
     },
     {
       timeSlot: '08:30 – 11:30 AM',
-      title: 'Post-Rush Dissipation & Solar Warming Transition',
-      phase: 'midday_transition',
-      safetyStatus: 'CAUTION',
-      badgeText: '⚠️ Caution — Inversion Lifting',
-      outdoorRecommendation: 'Solar heating begins breaking down the surface boundary layer. Short essential transit permitted with mask.',
-      indoorIAQProtocol: 'Execute wet-mopping with microfibre cloth across all hard floors. Avoid dry broom sweeping which resuspends settled PM2.5.',
-      transitSwap: 'Batch errands for midday instead of early morning.',
-      rwaAction: 'Prohibit horticulture leaf sweeping using dry leaf blowers. Wet-sweep common pathways.'
+      title: 'Post-Rush Dissipation & Solar Boundary Expansion',
+      status: 'CAUTION',
+      badge: '⚠️ Moderate Caution',
+      badgeClass: 'badge-warning',
+      actionProtocol: 'Sun begins heating surface soil; atmospheric boundary layer gradually lifts. Essential short-distance transit permitted.',
+      iaqIndoorStep: 'Mop all hard floors with a damp microfibre cloth. Strictly avoid dry broom sweeping which resuspends fine soot.',
+      commuteAlternative: 'Batch non-urgent courier deliveries and errands for the midday solar window.',
+      societyCoordination: 'Prohibit diesel generator operation for non-essential utility loads.'
     },
     {
       timeSlot: '12:00 – 03:30 PM',
-      title: 'Convective Solar Ventilation Window (Safest Outdoor Hours)',
-      phase: 'safe_window',
-      safetyStatus: 'SAFE',
-      badgeText: '✅ Cleanest Window of the Day',
-      outdoorRecommendation: personaKey === 'school_child'
-        ? 'Optimal window for child outdoor sports, school recess, and outdoor playtime! Planetary boundary layer is at maximum height.'
-        : personaKey === 'elderly_asthma'
-        ? 'Safest time for mild sunshine exposure, vitamin D synthesis, and gentle walking in society gardens.'
-        : 'Safest window for outdoor errands, market visits, grocery pickups, and outdoor sports.',
-      indoorIAQProtocol: 'Open opposite windows for 15-20 minutes for high-speed cross-ventilation to flush accumulated indoor CO2 and bio-effluents. Run kitchen exhaust.',
-      transitSwap: 'Safe window for active cycling or walking for short-distance trips under 2 km.',
-      rwaAction: 'Schedule society maintenance, garden watering, and parcel deliveries during this low-smog window.'
+      title: 'Convective Solar Ventilation Window (Cleanest Hours)',
+      status: 'SAFE_WINDOW',
+      badge: '✅ Optimal Clean Air Window',
+      badgeClass: 'badge-success',
+      actionProtocol: archetypeKey === 'apartment_family'
+        ? 'Safest window of the day for children recess, balcony sunshine, elderly strolls, and outdoor grocery shopping.'
+        : archetypeKey === 'daily_commuter'
+        ? 'Ideal window for outdoor walking meetings, lunch breaks, and short-distance cycling.'
+        : 'Open common society community hall doors for high-volume cross-ventilation flushing.',
+      iaqIndoorStep: 'Open opposite windows for 15-20 minutes with kitchen/exhaust fans running to rapidly flush stale indoor CO2.',
+      commuteAlternative: 'Short trips (< 2 km) can be safely conducted on foot or bicycle during this clean air pocket.',
+      societyCoordination: 'Schedule garden watering and compost pit aerations during this convective mixing window.'
     },
     {
-      timeSlot: '03:30 – 06:30 PM',
-      title: 'Late Afternoon Cooling & Twilight Boundary Collapse',
-      phase: 'evening_transition',
-      safetyStatus: 'CAUTION',
-      badgeText: '⚠️ Twilight Precautions',
-      outdoorRecommendation: 'As the sun sets, surface temperatures plummet and inversion cap re-forms. Return children indoors by 5:30 PM.',
-      indoorIAQProtocol: 'Tightly close all windows, balcony doors, and bathroom ventilators. Check that door-bottom draft snakes are deployed.',
-      transitSwap: 'Depart early for evening commute to beat peak vehicular idling congestion.',
-      rwaAction: 'Verify that society diesel generators are NOT run for non-essential loads. Switch to battery bank.'
+      timeSlot: '03:30 – 06:00 PM',
+      title: 'Late Afternoon Cooling & Sunset Boundary Inversion',
+      status: 'CAUTION',
+      badge: '⚠️ Twilight Re-sealing',
+      badgeClass: 'badge-warning',
+      actionProtocol: 'As sunlight wanes, cold surface layer begins trapping evening emissions. Bring school children indoors by 5:15 PM.',
+      iaqIndoorStep: 'Seal all windows, balcony doors, and kitchen vents. Deploy door-bottom draft snakes against chilly drafts.',
+      commuteAlternative: 'Stagger office departure by 30 minutes to avoid idling in heavy peak-hour bumper-to-bumper traffic.',
+      societyCoordination: 'Turn on society pathway solar lights; confirm no dry leaf piles are ignited by sweepers.'
     },
     {
-      timeSlot: '06:30 – 10:00 PM',
-      title: 'Evening Accumulation Spike & Night Rush Trapping',
-      phase: 'evening_peak',
-      safetyStatus: 'HAZARDOUS',
-      badgeText: '🚫 Hazardous Smog Spike',
-      outdoorRecommendation: 'Secondary severe smog spike fueled by rush hour exhaust, cool air trapping, and neighborhood cooking/heating fires. Avoid all outdoor dining and parks.',
-      indoorIAQProtocol: 'Turn on kitchen exhaust fan 2 minutes prior to cooking dinner. Keep frying pans lidded. Absolutely NO incense, dhoop, or mosquito coils.',
-      transitSwap: 'Take Metro or shared electric shuttles. Keep car cabin air filter on Recirculate.',
-      rwaAction: 'Deploy security vigil to strictly penalize open burning of dry leaves, garbage, or scrap wood for guard warming.'
+      timeSlot: '06:00 – 09:30 PM',
+      title: 'Evening Accumulation Spike & Heavy Traffic Smog',
+      status: 'CRITICAL_RISK',
+      badge: '🚫 Severe Night Trap',
+      badgeClass: 'badge-danger',
+      actionProtocol: 'Secondary smog accumulation fueled by evening rush hour, unvented heating fires, and cool air sinking. Avoid outdoor restaurants and parks.',
+      iaqIndoorStep: 'Turn on kitchen exhaust 2 minutes before dinner cooking. Cook with covered lids. Absolutely zero incense or mosquito coils.',
+      commuteAlternative: 'Use underground Metro rail to completely bypass street-level diesel exhaust corridors.',
+      societyCoordination: 'Security patrol to immediately fine any unauthorized biomass, scrap wood, or garbage burning.'
     },
     {
-      timeSlot: '10:00 PM – 06:00 AM',
-      title: 'Overnight Inversion Trap & Chamber Purification',
-      phase: 'night_inversion',
-      safetyStatus: 'CAUTION',
-      badgeText: '🌙 Overnight Indoor Protection',
-      outdoorRecommendation: 'Cool ambient air remains saturated with particulate matter. Keep all external doors locked and sealed.',
-      indoorIAQProtocol: 'Keep Corsi-Rosenthal DIY box filter running on low in sleeping chambers (whisper quiet). Position Snake Plants in bedrooms for overnight O2 release.',
-      transitSwap: 'N/A — Rest & alveolar lung recovery period.',
-      rwaAction: 'Provide electric radiant heaters to night security guards to eliminate charcoal/wood angithi burning.'
+      timeSlot: '09:30 PM – 06:00 AM',
+      title: 'Overnight Cold Pool & Bedroom Purification',
+      status: 'CAUTION',
+      badge: '🌙 Overnight Recovery',
+      badgeClass: 'badge-info',
+      actionProtocol: 'Rest & alveolar lung healing period. Cool ambient air remains heavily loaded with fine PM2.5.',
+      iaqIndoorStep: 'Run Corsi-Rosenthal box on low whisper setting in sleeping chambers. Keep Snake Plants in bedrooms for nocturnal oxygen.',
+      commuteAlternative: 'N/A (Rest & Regeneration).',
+      societyCoordination: 'Provide security guards with electric infrared radiant heaters to prevent wood/angithi burning at guard posts.'
     }
   ];
 
-  const criticalAlerts = [];
-  if (curve.peakPM25 > 250) {
-    criticalAlerts.push(`CRITICAL: Peak morning PM2.5 in ${city.name} reaches ${curve.peakPM25} µg/m³ (Severe+). Respiratory masks mandatory outdoors.`);
+  const advisoryPills = [];
+  if (forecast.peakAQI > 300) {
+    advisoryPills.push(`Peak AQI reaches ${forecast.peakAQI} in ${city.name} — N95 masks non-negotiable.`);
   }
-  if (personaKey === 'infant' || personaKey === 'elderly_asthma') {
-    criticalAlerts.push(`VULNERABILITY WARNING: High alveolar susceptibility detected for ${persona.name}. Enforce strict indoor shelter between 06:00-09:30 AM and 19:00-22:00 PM.`);
+  if (vulnerabilities.includes('asthma') || vulnerabilities.includes('infants')) {
+    advisoryPills.push('High vulnerability detected: Enforce strict indoor shelter 6:00–9:30 AM.');
   }
-  if (housingKey === 'slum') {
-    criticalAlerts.push(`HOUSING WARNING: Informal construction has high particulate infiltration (~88%). Prioritize draft sealing and budget Corsi-Rosenthal box.`);
-  }
+  advisoryPills.push(`Safest outdoor window: 12:00 PM – 3:30 PM (yields ~${Math.round(((forecast.peakAQI - forecast.safeWindow.avgAQI) / forecast.peakAQI) * 100)}% lower exposure).`);
 
   return {
-    persona,
+    archetype: arch,
     city,
-    housing,
     curveSummary: {
-      peakHour: curve.peakHour,
-      peakPM25: curve.peakPM25,
-      cleanestHour: curve.cleanestHour,
-      cleanestPM25: curve.cleanestPM25,
-      ventilationWindow: curve.ventilationWindow
+      peakHour: forecast.peakHour,
+      peakAQI: forecast.peakAQI,
+      cleanestHour: forecast.cleanestHour,
+      cleanestAQI: forecast.cleanestAQI,
+      safeWindow: forecast.safeWindow
     },
-    blocks,
-    criticalAlerts
+    scheduleBlocks,
+    advisoryPills
   };
 }
 
 /**
- * Calculates quantified sustainable swaps across commute, heating, and waste
+ * Computes quantifiable carbon footprint & particulate emission abatement from lifestyle switches
  * @param {object} params
- * @param {number} [params.commuteDistanceKm=15]
- * @param {string} [params.currentCommute='ice_petrol_car']
- * @param {string} [params.targetCommute='metro_train']
+ * @param {string} [params.commuteCurrent='car']
+ * @param {string} [params.commuteTarget='metro']
+ * @param {number} [params.distanceKm=15] - one way
  * @param {number} [params.workDays=22]
- * @param {string} [params.heatingChoice='oil_radiator']
- * @param {number} [params.dryLeavesKg=20]
- * @returns {object}
+ * @param {boolean} [params.inductionCooking=true] - switch from LPG/biomass
+ * @param {number} [params.compostLeavesKg=25] - kg dry leaves composted vs burned
+ * @returns {{
+ *   monthlyCo2eSavedKg: number,
+ *   annualCo2eSavedKg: number,
+ *   pm25EmissionsPreventedGrams: number,
+ *   fuelCostSavedINR: number,
+ *   breakdown: {
+ *     commuteCo2Kg: number,
+ *     cookingCo2Kg: number,
+ *     compostCo2Kg: number
+ *   }
+ * }}
  */
-export function generateSustainableSwaps({
-  commuteDistanceKm = 15,
-  currentCommute = 'ice_petrol_car',
-  targetCommute = 'metro_train',
+export function calculateEmissionReductions({
+  commuteCurrent = 'car',
+  commuteTarget = 'metro',
+  distanceKm = 15,
   workDays = 22,
-  heatingChoice = 'oil_radiator',
-  dryLeavesKg = 20
+  inductionCooking = true,
+  compostLeavesKg = 25
 } = {}) {
-  const curEF = (SUSTAINABLE_SWAPS.transit[currentCommute] || SUSTAINABLE_SWAPS.transit.ice_petrol_car).ef;
-  const tgtEF = (SUSTAINABLE_SWAPS.transit[targetCommute] || SUSTAINABLE_SWAPS.transit.metro_train).ef;
+  const dist = clamp(distanceKm, 1, 100, 15);
+  const days = clamp(workDays, 1, 31, 22);
+  const leaves = clamp(compostLeavesKg, 0, 500, 25);
 
-  // Monthly commute CO2e saved = dist * 2 (round-trip) * (curEF - tgtEF) * workDays
-  const dailyCommuteKm = commuteDistanceKm * 2;
-  const monthlyCo2SavedTransit = Math.max(0, Math.round(dailyCommuteKm * (curEF - tgtEF) * workDays * 10) / 10);
-  const annualCo2SavedTransit = Math.round(monthlyCo2SavedTransit * 12);
+  const curEF = (COMMUTE_MODES[commuteCurrent] || COMMUTE_MODES.car).ef;
+  const tgtEF = (COMMUTE_MODES[commuteTarget] || COMMUTE_MODES.metro).ef;
 
-  // Heating choice savings vs biomass/wood angithi
-  const angithiCo2 = SUSTAINABLE_SWAPS.heating.biomass_angithi.co2PerMonth;
-  const chosenHeatingCo2 = (SUSTAINABLE_SWAPS.heating[heatingChoice] || SUSTAINABLE_SWAPS.heating.oil_radiator).co2PerMonth;
-  const monthlyCo2SavedHeating = Math.max(0, angithiCo2 - chosenHeatingCo2);
+  // Round trip distance per day = dist * 2
+  const roundTripKm = dist * 2;
+  const monthlyKm = roundTripKm * days;
 
-  // Waste composting savings vs open leaf burning
-  // 1.4 kg CO2e per kg dry leaves + 18g of toxic PM2.5 emitted avoided per kg
-  const leavesCo2Saved = Math.round(dryLeavesKg * 1.3 * 10) / 10;
-  const pm25EmissionsAvoidedGrams = Math.round(dryLeavesKg * 18);
+  // Monthly commute CO2e saved (kg) = km * (curEF - tgtEF)
+  const commuteCo2Kg = Math.max(0, Math.round(monthlyKm * (curEF - tgtEF) * 10) / 10);
 
-  const totalMonthlyCo2eSaved = Math.round((monthlyCo2SavedTransit + monthlyCo2SavedHeating + leavesCo2Saved) * 10) / 10;
+  // Cooking switch: Induction vs unvented LPG saves ~18 kg CO2e/month and eliminates indoor combustion
+  const cookingCo2Kg = inductionCooking ? 18.0 : 0.0;
+
+  // Leaf composting: Open burning emits 1.4 kg CO2e and 18g of toxic PM2.5 per kg leaves
+  const compostCo2Kg = Math.round(leaves * 1.35 * 10) / 10;
+  const pm25PreventedGrams = Math.round(leaves * 18.0);
+
+  const totalMonthlyCo2e = Math.round((commuteCo2Kg + cookingCo2Kg + compostCo2Kg) * 10) / 10;
+  const annualCo2e = Math.round(totalMonthlyCo2e * 12);
+
+  // Fuel cost savings (assuming ₹7.5/km average ICE running cost minus ₹1.5/km metro fare)
+  const fuelCostSavedINR = Math.max(0, Math.round(monthlyKm * (curEF > 0.05 ? 6.0 : 0)));
 
   return {
-    transit: {
-      fromName: SUSTAINABLE_SWAPS.transit[currentCommute].name,
-      toName: SUSTAINABLE_SWAPS.transit[targetCommute].name,
-      monthlyCo2SavedKg: monthlyCo2SavedTransit,
-      annualCo2SavedKg: annualCo2SavedTransit,
-      fuelCostSavedINR: Math.round(dailyCommuteKm * workDays * 6.5) // approx ₹6.5/km fuel saving vs metro
-    },
-    heating: {
-      name: SUSTAINABLE_SWAPS.heating[heatingChoice].name,
-      monthlyCo2SavedKg: monthlyCo2SavedHeating,
-      indoorPmAdvantage: 'Zero indoor combustion emissions'
-    },
-    waste: {
-      dryLeavesKg,
-      co2SavedKg: leavesCo2Saved,
-      pm25EmissionsAvoidedGrams
-    },
-    totalMonthlyCo2eSaved
+    monthlyCo2eSavedKg: totalMonthlyCo2e,
+    annualCo2eSavedKg: annualCo2e,
+    pm25EmissionsPreventedGrams: pm25PreventedGrams,
+    fuelCostSavedINR,
+    breakdown: {
+      commuteCo2Kg,
+      cookingCo2Kg,
+      compostCo2Kg
+    }
   };
 }
