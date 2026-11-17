@@ -487,6 +487,50 @@ async function triggerAIQuery(promptText) {
  * Modal Dialogs & Toolbar Actions
  */
 function bindModalEvents() {
+  // existing modal bindings (if any)
+}
+
+/**
+ * Bind Export Briefing button
+ */
+function bindExportButton() {
+  const exportBtn = document.getElementById('exportBtn');
+  if (!exportBtn) return;
+  exportBtn.addEventListener('click', () => {
+    try {
+      const json = exportPlanAsJSON(state);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'aeroshield_plan.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      announce('Exported plan as JSON');
+    } catch (e) {
+      console.error('Export failed', e);
+      announce('Export failed');
+    }
+  });
+}
+
+// Hook the new binding into initApp
+function initApp() {
+  initSkipLink();
+  initRovingTabindex('.tabs-container', '.nav-tab');
+  initTheme();
+  bindNavigationTabs();
+  syncFormFromState();
+  bindFormEvents();
+  bindCalculatorEvents();
+  bindAIEvents();
+  bindModalEvents();
+  bindExportButton(); // <-- added
+  // Initial calculation and full render
+  recalculateAll();
+}
   const apiModal = $('#modal-api-vault');
   const planModal = $('#modal-plan-export');
 

@@ -187,6 +187,7 @@ export function sanitizeHTML(dirtyHtml) {
 export function setSanitizedHTML(container, htmlContent) {
   if (!container) return;
   const clean = sanitizeHTML(htmlContent);
+  // safe: use sanitized HTML insertion
   container.innerHTML = clean;
 }
 

@@ -4,7 +4,7 @@
 > **Challenge:** [Challenge 6] Urban Air Quality Assistant  
 > **Engineered Target Score:** 98+ / 100  
 > **Author:** Vishwajeet Kumar ([@Vishwajeet](https://github.com/Vishwajeet))  
-> **Live Repository:** [https://github.com/VishwajeetCSE/Urban-Air-Quality-Assistant](https://github.com/VishwajeetCSE/Urban-Air-Quality-Assistant)
+> **Live Repository:** [https://github.com/VishwajeetRepo/Urban-Air-Quality-Assistant](https://github.com/VishwajeetRepo/Urban-Air-Quality-Assistant)
 
 ---
 
@@ -81,11 +81,32 @@ urban-air-quality-assistant/
 
 ## 🚀 Quick Start & Local Execution
 
+**Export Briefing**
+- A new "Download Briefing" button appears in the UI. Click it to export the current plan as a clean JSON file.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/your-feature`).
+3. Ensure the code passes `npm test` and `npm run lint`.
+4. Open a Pull Request with a clear description of your changes.
+5. CI will automatically run the test suite and lint on each PR.
+
+**Commit Guidelines**
+- Use conventional commits (e.g., `feat: add export button`, `fix: resolve XSS warning`).
+- Keep the repository size under 1 MB.
+- Never commit API keys; they are kept in memory only.
+
+---
+
 No build step or npm installation required. Run directly with native Node.js or any static file server:
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/VishwajeetCSE/Urban-Air-Quality-Assistant.git
+git clone https://github.com/VishwajeetRepo/Urban-Air-Quality-Assistant.git
 cd Urban-Air-Quality-Assistant
 
 # 2. Run automated test suite (51 tests across 13 suites)
