@@ -1,216 +1,163 @@
 /**
- * @fileoverview DIY Indoor Air Quality (IAQ) Hacks & Filtration Specs Engine
- * Corsi-Rosenthal CADR calculator, ACH clearance curves, and NASA botanical phytoremediation
+ * @fileoverview DIY Air Purifier Aerodynamics, ACH Physics, and Botanical Bio-Shield Engine
  * @module hacks-engine
- * @author Vishwajeet Kumar
+ * @author Vishwajeet Kumar (VishwajeetCSE)
  * @license MIT
  */
 
-import { ARCHETYPES, DIY_IAQ_HACKS } from './constants.js';
+import { DIY_PURIFIER_CONFIGS, NASA_PLANT_ROSTER } from './constants.js';
 import { clamp } from './security.js';
 
 /**
- * Filter single-pass efficiencies for PM2.5
- */
-export const FILTER_EFFICIENCIES = {
-  merv13: 0.85,
-  hepa: 0.9997,
-  merv11: 0.65
-};
-
-/**
- * Airflow pressure drop multipliers based on filter surface geometry
- * Calibrated against UC Davis / EPA wind tunnel measurements of 20" box fans
- */
-const GEOMETRIC_AIRFLOW_FACTORS = {
-  1: 0.22, // Single flat filter on fan face (high static backpressure)
-  2: 0.30,
-  4: 0.38, // Standard 4-sided cube (delivers ~500-600 CFM)
-  5: 0.44  // 5-filter cube with bottom filter
-};
-
-/**
- * Computes Corsi-Rosenthal Box Performance Metrics
+ * Computes fluid-dynamic airflow, CADR, Air Changes per Hour (ACH), and particle clearance decay
+ *
  * @param {object} params
- * @param {number} [params.fanCFM=1800] - Free air rating of 20" box fan
- * @param {'merv13'|'hepa'|'merv11'} [params.filterType='merv13']
- * @param {number} [params.filterCount=4]
- * @param {number} [params.roomAreaSqFt=300]
- * @param {number} [params.ceilingHeightFt=10]
- * @param {number} [params.bypassLeakPct=5]
- * @returns {{
- *   cadrCFM: number,
- *   ach: number,
- *   time90Mins: number,
- *   time99Mins: number,
- *   diyCostINR: number,
- *   commercialEquivINR: number,
- *   costSavingsPct: number,
- *   isAdequateForSmog: boolean,
- *   roomVolumeCuFt: number
- * }}
+ * @param {number} [params.roomLengthFt=15]
+ * @param {number} [params.roomWidthFt=12]
+ * @param {number} [params.roomHeightFt=10]
+ * @param {number} [params.fanCFM=1800] Typical 20-inch box fan rating
+ * @param {number} [params.filterCount=4] Standard 4-panel cube
+ * @param {'merv13'|'merv11'|'hepa'} [params.filterGrade='merv13']
+ * @returns {object} Physical metrics and clearance duration
  */
 export function calculateCorsiRosenthalSpecs({
+  roomLengthFt = 15,
+  roomWidthFt = 12,
+  roomHeightFt = 10,
   fanCFM = 1800,
-  filterType = 'merv13',
   filterCount = 4,
-  roomAreaSqFt = 300,
-  ceilingHeightFt = 10,
-  bypassLeakPct = 5
+  filterGrade = 'merv13'
 } = {}) {
-  const fan = clamp(fanCFM, 400, 3000, 1800);
-  const eta = FILTER_EFFICIENCIES[filterType] || FILTER_EFFICIENCIES.merv13;
-  const countFactor = GEOMETRIC_AIRFLOW_FACTORS[filterCount] || 0.82;
-  const leakFraction = clamp(bypassLeakPct, 0, 25, 5) / 100;
+  const l = clamp(roomLengthFt, 6, 60, 15);
+  const w = clamp(roomWidthFt, 6, 60, 12);
+  const h = clamp(roomHeightFt, 7, 20, 10);
+  const volumeCuFt = l * w * h;
+  const areaSqFt = l * w;
 
-  // Single-pass effective efficiency accounting for perimeter tape leakage
-  const effectiveEta = eta * (1 - leakFraction);
+  // Filter single-pass efficiency on PM2.5
+  const efficiency = filterGrade === 'hepa' ? 0.99 : (filterGrade === 'merv13' ? 0.85 : 0.65);
 
-  // Loaded fan airflow through low-resistance multi-filter array
-  const loadedFlowCFM = fan * countFactor;
+  // Cardboard shroud pressure multiplier (+35% fan efficiency by preventing vortex backflow)
+  const shroudMultiplier = 1.35;
 
-  // Effective CADR = Q_eff * eta_eff
-  const cadrCFM = Math.round(loadedFlowCFM * effectiveEta);
+  // Surface area reduction factor: 4 or 5 filters in parallel drop static resistance by 70%
+  const resistanceRelief = Math.min(1.0, 0.45 + (filterCount * 0.12));
 
-  const area = clamp(roomAreaSqFt, 50, 1500, 300);
-  const height = clamp(ceilingHeightFt, 7, 20, 10);
-  const roomVolumeCuFt = area * height;
+  // Effective Clean Air Delivery Rate (CADR in CFM)
+  const effectiveCadrCFM = Math.round(fanCFM * resistanceRelief * efficiency * (shroudMultiplier / 1.5));
 
-  // Air Changes per Hour: ACH = (CADR * 60) / Volume
-  const ach = Math.round(((cadrCFM * 60) / roomVolumeCuFt) * 10) / 10;
+  // Air Changes Per Hour (ACH): (CADR * 60) / Room Volume
+  const ach = Math.round(((effectiveCadrCFM * 60) / volumeCuFt) * 10) / 10;
 
-  // Clearance times (differential particulate decay equation):
-  // t90 = -ln(0.10) / ACH * 60 min = (2.3026 / ACH) * 60
-  // t99 = -ln(0.01) / ACH * 60 min = (4.6052 / ACH) * 60
-  const time90Mins = ach > 0 ? Math.round((2.3026 / ach) * 60) : 0;
-  const time99Mins = ach > 0 ? Math.round((4.6052 / ach) * 60) : 0;
+  // Exponential particle clearance times: t = ln(1 / (1 - Fraction)) / ACH
+  // 50% clearance: ln(2) / ACH * 60 min
+  const t50Min = ach > 0 ? Math.round((0.693 / ach) * 60) : 999;
+  // 90% clearance: ln(10) / ACH * 60 min
+  const t90Min = ach > 0 ? Math.round((2.303 / ach) * 60) : 999;
+  // 99% clearance: ln(100) / ACH * 60 min
+  const t99Min = ach > 0 ? Math.round((4.605 / ach) * 60) : 999;
 
-  // Bill of Materials: 20" Box Fan (~₹1800) + Filters (~₹650 each) + Shroud/Duct tape (~₹350)
-  const diyCostINR = Math.round(1800 + (filterCount * 650) + 350);
+  // ACH Rating according to CDC / Harvard Healthy Buildings guidelines:
+  // < 3: Deficient; 3-5: Moderate; 5-6: Good; > 6: Ideal for Vulnerable Care
+  let achRating = 'Adequate';
+  if (ach >= 6.0) achRating = 'Excellent (Hospital / Vulnerable Care Grade)';
+  else if (ach >= 4.0) achRating = 'Good (Safe for Residential Living)';
+  else if (ach >= 2.5) achRating = 'Moderate (Minimum Acceptable)';
+  else achRating = 'Underpowered (Increase Fan CFM or Add Units)';
 
-  // Commercial purifier providing equivalent ~500 CFM CADR (e.g. Coway Airmega 400 / Philips 3000i)
-  const commercialEquivINR = Math.round(cadrCFM * 60);
-  const costSavingsPct = Math.round(((commercialEquivINR - diyCostINR) / commercialEquivINR) * 100);
-
-  // Meets medical guideline: ACH >= 4.0 for respiratory protection in winter smog
-  const isAdequateForSmog = ach >= 4.0;
+  const diyCostINR = 3800;
+  const compHepaCostINR = 19500;
+  const savingsINR = compHepaCostINR - diyCostINR;
+  const savingsPct = Math.round((savingsINR / compHepaCostINR) * 100);
 
   return {
-    cadrCFM,
+    dimensions: { length: l, width: w, height: h, volumeCuFt, areaSqFt },
+    effectiveCadrCFM,
+    effectiveCadrM3Hr: Math.round(effectiveCadrCFM * 1.699),
     ach,
-    time90Mins,
-    time99Mins,
-    diyCostINR,
-    commercialEquivINR,
-    costSavingsPct,
-    isAdequateForSmog,
-    roomVolumeCuFt
+    achRating,
+    clearanceTimes: {
+      t50Min,
+      t90Min,
+      t99Min
+    },
+    costComparison: {
+      diyCostINR,
+      compHepaCostINR,
+      savingsINR,
+      savingsPct
+    }
   };
 }
 
 /**
- * Evaluates indoor particulate concentration with layered DIY hacks applied
- * @param {number} outdoorPM25 - ug/m3
- * @param {string} [archetypeKey='apartment_family']
- * @param {string[]} [activeHackIds=[]]
- * @returns {{
- *   unmitigatedPM25: number,
- *   mitigatedPM25: number,
- *   reductionPct: number,
- *   absoluteReduction: number,
- *   hackImpacts: Array<{ id: string, name: string, reductionContribution: number }>
- * }}
+ * Calculates cumulative indoor PM2.5 suppression achieved across adopted DIY hacks
+ *
+ * @param {string[]} activeHackKeys
+ * @param {number} outdoorPM25
+ * @returns {object} Final expected indoor PM2.5 and suppression percentage
  */
-export function calculateIndoorSuppression(
-  outdoorPM25 = 180,
-  archetypeKey = 'apartment_family',
-  activeHackIds = []
-) {
-  const outdoor = clamp(outdoorPM25, 10, 800, 180);
-  const arch = ARCHETYPES[archetypeKey] || ARCHETYPES.apartment_family;
-  const infiltration = arch.baseInfiltration;
+export function calculateIndoorSuppression(activeHackKeys = [], outdoorPM25 = 200) {
+  const hackCatalog = {
+    corsi_rosenthal: { name: 'DIY Corsi-Rosenthal Multi-Stage Purifier', reductionPct: 65 },
+    window_sealing: { name: 'Silicone Weatherstrip Gap Sealing', reductionPct: 12 },
+    wet_mopping: { name: 'Microfibre Wet-Mopping Protocol', reductionPct: 8 },
+    kitchen_exhaust: { name: 'Cooktop Range Hood with Backdraft Damper', reductionPct: 5 },
+    incense_ban: { name: 'Zero Incense / Mosquito Coil Combustion', reductionPct: 8 },
+    phytoremediation: { name: 'Botanical VOC Bio-Shield Matrix', reductionPct: 4 }
+  };
 
-  // Unmitigated indoor baseline: outdoor infiltration + standard internal sources (cooking + agarbatti)
-  const hasIncense = !activeHackIds.includes('incense_ban');
-  const internalLoad = hasIncense ? 90 : 15; // 90 ug/m3 internal smoke if agarbatti active
-  const unmitigatedPM25 = Math.round(outdoor * infiltration + internalLoad);
+  let totalSuppressionPct = 0;
+  const activeItems = [];
 
-  // Layered sequential mitigation
-  let penetratedPM = outdoor * infiltration;
-  const hackImpacts = [];
+  activeHackKeys.forEach(key => {
+    if (hackCatalog[key]) {
+      totalSuppressionPct += hackCatalog[key].reductionPct;
+      activeItems.push(hackCatalog[key].name);
+    }
+  });
 
-  if (activeHackIds.includes('corsi_rosenthal')) {
-    const delta = penetratedPM * 0.74;
-    penetratedPM -= delta;
-    hackImpacts.push({ id: 'corsi_rosenthal', name: 'DIY Corsi-Rosenthal Box', reductionContribution: Math.round(delta) });
-  }
-
-  if (activeHackIds.includes('wet_mopping')) {
-    const delta = penetratedPM * 0.22;
-    penetratedPM -= delta;
-    hackImpacts.push({ id: 'wet_mopping', name: 'Microfibre Wet-Mopping', reductionContribution: Math.round(delta) });
-  }
-
-  if (activeHackIds.includes('window_sealing')) {
-    const delta = penetratedPM * 0.18;
-    penetratedPM -= delta;
-    hackImpacts.push({ id: 'window_sealing', name: 'Weatherstrip & Draft Sealing', reductionContribution: Math.round(delta) });
-  }
-
-  if (activeHackIds.includes('kitchen_exhaust')) {
-    const delta = penetratedPM * 0.16;
-    penetratedPM -= delta;
-    hackImpacts.push({ id: 'kitchen_exhaust', name: 'Kitchen Exhaust Pre-Purge', reductionContribution: Math.round(delta) });
-  }
-
-  if (activeHackIds.includes('phytoremediation')) {
-    const delta = penetratedPM * 0.10;
-    penetratedPM -= delta;
-    hackImpacts.push({ id: 'phytoremediation', name: 'NASA Botanical Plants', reductionContribution: Math.round(delta) });
-  }
-
-  if (activeHackIds.includes('incense_ban')) {
-    hackImpacts.push({ id: 'incense_ban', name: 'Cessation of Agarbatti & Coils', reductionContribution: 75 });
-  }
-
-  const mitigatedPM25 = Math.max(10, Math.round(penetratedPM + (hasIncense ? 90 : 5)));
-  const absoluteReduction = Math.max(0, unmitigatedPM25 - mitigatedPM25);
-  const reductionPct = Math.round((absoluteReduction / unmitigatedPM25) * 100);
+  // Diminishing returns ceiling (maximum 92% passive/active suppression)
+  const effectiveReductionPct = Math.min(92, totalSuppressionPct);
+  const indoorPM25 = Math.max(12, Math.round(outdoorPM25 * (1 - effectiveReductionPct / 100)));
 
   return {
-    unmitigatedPM25,
-    mitigatedPM25,
-    reductionPct,
-    absoluteReduction,
-    hackImpacts
+    outdoorPM25,
+    indoorPM25,
+    effectiveReductionPct,
+    activeItems,
+    isSafeLevel: indoorPM25 <= 25
   };
 }
 
 /**
- * Calculates NASA Clean Air Study botanical phytoremediation requirements
- * @param {number} roomAreaSqFt
- * @returns {{
- *   totalPlants: number,
- *   roster: Array<{ name: string, count: number, role: string, care: string }>
- * }}
+ * Calculates NASA Clean-Air botanical phytoremediation requirement for room volume
+ *
+ * @param {number} areaSqFt
+ * @returns {object} Recommended plant inventory and volatile organic compound removal targets
  */
-export function calculateBotanicalNeeds(roomAreaSqFt = 300) {
-  const area = clamp(roomAreaSqFt, 50, 1500, 300);
-  // NASA guideline: 1 plant per 100 sq ft minimum; 1.8 for active phytoremediation
-  const total = Math.max(3, Math.round((area / 100) * 1.8));
+export function calculateBotanicalNeeds(areaSqFt = 180) {
+  const area = clamp(areaSqFt, 50, 1000, 180);
+  const scaling = area / 100;
 
-  const snakePlant = Math.max(1, Math.round(total * 0.35));
-  const arecaPalm = Math.max(1, Math.round(total * 0.25));
-  const spiderPlant = Math.max(1, Math.round(total * 0.25));
-  const moneyPlant = Math.max(1, total - snakePlant - arecaPalm - spiderPlant);
+  const plants = NASA_PLANT_ROSTER.map(p => {
+    const recommendedPots = Math.max(1, Math.round(p.unitsPer100SqFt * scaling));
+    return {
+      ...p,
+      recommendedPots
+    };
+  });
+
+  const totalPots = plants.reduce((sum, p) => sum + p.recommendedPots, 0);
 
   return {
-    totalPlants: snakePlant + arecaPalm + spiderPlant + moneyPlant,
-    roster: [
-      { name: 'Snake Plant (Sansevieria)', count: snakePlant, role: 'Bedroom night O2 (CAM pathway) & benzene absorption', care: 'Water once every 2 weeks' },
-      { name: 'Areca Palm (Butterfly Palm)', count: arecaPalm, role: 'Natural daytime humidifier; settles suspended PM2.5', care: 'Bright indirect sunlight' },
-      { name: 'Spider Plant', count: spiderPlant, role: 'Carbon monoxide & formaldehyde scrubbing', care: 'Resilient and easy' },
-      { name: 'Golden Pothos (Money Plant)', count: moneyPlant, role: 'Waxy leaf surface traps microscopic soot particles', care: 'Wipe leaves weekly with damp cloth' }
+    areaSqFt: area,
+    totalPots,
+    plants,
+    primaryBenefits: [
+      'Removes toxic indoor VOCs (Formaldehyde, Benzene, Toluene) from plywood & paint',
+      'Snake plants conduct Crassulacean Acid Metabolism (releases Oxygen at night during sleep)',
+      'Natural humidity balance suppresses dust resuspension in dry winter conditions'
     ]
   };
 }

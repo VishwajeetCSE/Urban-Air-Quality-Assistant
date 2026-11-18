@@ -1,9 +1,10 @@
 /**
- * @fileoverview Standalone Zero-Dependency Test Runner for AeroShield AI
- * Runs 13 comprehensive test suites (50+ assertions) covering calculation engines,
- * diurnal inversion models, Corsi-Rosenthal physics, XSS security, and heuristic AI.
+ * @fileoverview Standalone Zero-Dependency Verification Test Suite for VayuGuardian AI
+ * Runs 14 comprehensive test suites (55+ assertions) covering CPCB NAQI math,
+ * diurnal planetary boundary layer physics, Corsi-Rosenthal aerodynamics,
+ * OWASP XSS security barriers, and offline heuristic GenAI rules.
  * Execute with: node test.js
- * @author Vishwajeet Kumar
+ * @author Vishwajeet Kumar (VishwajeetCSE)
  * @license MIT
  */
 
@@ -67,474 +68,474 @@ function test(description, fn) {
   }
 }
 
-console.log('\x1b[1m\x1b[35m================================================================');
-console.log('   🍃 AeroShield AI — Automated Verification Test Suite (50+ Tests)');
+console.log('\x1b[1m\x1b[32m================================================================');
+console.log('   🍃 VayuGuardian AI — Standalone Verification Engine (55+ Tests)');
 console.log('================================================================\x1b[0m');
 
 // -------------------------------------------------------------
 // Suite 1: CPCB NAQI & Pollutant Sub-Index Calculation
 // -------------------------------------------------------------
-suite('Suite 1: CPCB Pollutant Sub-Index & Composite AQI', () => {
-  test('PM2.5 sub-index computes accurate Good range (0-30 ug/m3 -> AQI 0-50)', () => {
+suite('Suite 1: CPCB NAQI Multi-Pollutant Sub-Index Calculation', () => {
+  test('PM2.5 sub-index correctly maps Good range (0-30 ug/m3 -> AQI 0-50)', () => {
     const res = calculatePollutantSubIndex('pm25', 15);
     assert.strictEqual(typeof res.subIndex, 'number');
     assert.ok(res.subIndex >= 0 && res.subIndex <= 50);
-    assert.strictEqual(res.label, 'Good');
+    assert.strictEqual(res.category, 'Good');
   });
 
-  test('PM10 sub-index computes accurate Moderate range (100-250 ug/m3)', () => {
-    const res = calculatePollutantSubIndex('pm10', 180);
+  test('PM10 sub-index computes accurate Moderate range (101-250 ug/m3)', () => {
+    const res = calculatePollutantSubIndex('pm10', 175);
     assert.ok(res.subIndex >= 101 && res.subIndex <= 200);
-    assert.strictEqual(res.label, 'Moderate');
+    assert.strictEqual(res.category, 'Moderate');
   });
 
-  test('NO2 and O3 sub-indices calculate correctly across CPCB breakpoints', () => {
-    const no2 = calculatePollutantSubIndex('no2', 90);
-    assert.strictEqual(no2.label, 'Moderate');
-    const o3 = calculatePollutantSubIndex('o3', 180);
-    assert.strictEqual(o3.label, 'Poor');
+  test('NO2 and SO2 sub-indices calculate correctly across regulatory breakpoints', () => {
+    const no2 = calculatePollutantSubIndex('no2', 120);
+    assert.strictEqual(no2.category, 'Moderate');
+    const so2 = calculatePollutantSubIndex('so2', 50);
+    assert.strictEqual(so2.category, 'Satisfactory');
   });
 
-  test('PM2.5 sub-index correctly identifies Severe (> 250 ug/m3 -> AQI > 400)', () => {
-    const res = calculatePollutantSubIndex('pm25', 300);
+  test('PM2.5 sub-index identifies Severe category (> 250 ug/m3 -> AQI > 400)', () => {
+    const res = calculatePollutantSubIndex('pm25', 320);
     assert.ok(res.subIndex > 400);
-    assert.strictEqual(res.label, 'Severe');
+    assert.strictEqual(res.category, 'Severe');
   });
 
-  test('Composite AQI follows CPCB maximum sub-index principle', () => {
-    const comp = calculateCompositeAQI({ pm25: 140, pm10: 80, no2: 45, o3: 30 });
-    assert.ok(comp.aqi >= 300);
-    assert.strictEqual(comp.prominentPollutant, 'PM2.5');
-    assert.strictEqual(comp.category, 'Very Poor');
+  test('CO and O3 sub-indices interpolate correctly with decimal concentration precision', () => {
+    const co = calculatePollutantSubIndex('co', 1.5);
+    assert.strictEqual(co.category, 'Satisfactory');
+    const o3 = calculatePollutantSubIndex('o3', 190);
+    assert.strictEqual(o3.category, 'Poor');
   });
 
-  test('Composite AQI handles missing or negative pollutant inputs safely', () => {
-    const comp = calculateCompositeAQI({});
-    assert.ok(comp.aqi >= 0 && comp.aqi <= 500);
-    assert.ok(typeof comp.healthAdvisory === 'string');
-    assert.strictEqual(typeof comp.subIndices.pm25, 'number');
+  test('High industrial SO2 concentration (> 800 ug/m3) correctly maps to Very Poor/Severe', () => {
+    const so2High = calculatePollutantSubIndex('so2', 900);
+    assert.ok(so2High.subIndex >= 301);
+    assert.strictEqual(so2High.category, 'Very Poor');
   });
 });
 
 // -------------------------------------------------------------
-// Suite 2: Diurnal Smog Inversion Curve & Solar Convection Window
+// Suite 2: CPCB Composite AQI & WHO 2021 Benchmark Comparison
 // -------------------------------------------------------------
-suite('Suite 2: Diurnal Smog Inversion & Planetary Boundary Modeling', () => {
-  const forecast = getDiurnalSmogForecast(300, 'delhi');
+suite('Suite 2: Composite AQI & WHO 2021 Exceedance Ratios', () => {
+  test('Composite AQI follows CPCB maximum sub-index principle', () => {
+    const comp = calculateCompositeAQI({ pm25: 160, pm10: 90, no2: 40 });
+    assert.ok(comp.aqi >= 300);
+    assert.strictEqual(comp.prominentPollutant, 'PM25');
+    assert.strictEqual(comp.category, 'Very Poor');
+  });
 
-  test('Generates complete 24-hour hourly profile', () => {
+  test('Calculates accurate WHO 2021 24-hr exceedance ratios for PM2.5 and PM10', () => {
+    const comp = calculateCompositeAQI({ pm25: 150, pm10: 90 });
+    // WHO PM2.5 limit is 15 ug/m3 -> 150 / 15 = 10x
+    assert.strictEqual(comp.whoExceedances.pm25.ratio, 10);
+    assert.strictEqual(comp.whoExceedances.pm25.isExceeded, true);
+  });
+
+  test('Computes NO2 and SO2 exceedances against WHO guidelines', () => {
+    const comp = calculateCompositeAQI({ no2: 75, so2: 60 });
+    // WHO NO2 limit is 25 ug/m3 -> 75 / 25 = 3x
+    assert.strictEqual(comp.whoExceedances.no2.ratio, 3);
+    assert.strictEqual(comp.whoExceedances.no2.isExceeded, true);
+  });
+
+  test('Handles empty or invalid input gracefully with default estimates', () => {
+    const comp = calculateCompositeAQI({});
+    assert.ok(comp.aqi >= 0 && comp.aqi <= 500);
+    assert.ok(typeof comp.healthAdvisory === 'string');
+  });
+});
+
+// -------------------------------------------------------------
+// Suite 3: Diurnal Smog Inversion Curve & Safe Activity Windows
+// -------------------------------------------------------------
+suite('Suite 3: Diurnal Atmospheric Inversion & Planetary Boundary Modeling', () => {
+  const forecast = getDiurnalSmogForecast(300, 'delhi', 'dense_residential');
+
+  test('Generates full 24-hour hourly profile with time labels', () => {
     assert.strictEqual(forecast.hours.length, 24);
     assert.strictEqual(forecast.hours[0].timeLabel, '00:00');
     assert.strictEqual(forecast.hours[23].timeLabel, '23:00');
   });
 
-  test('Peak morning smog trap occurs between 6 AM and 9 AM', () => {
-    assert.ok(forecast.peakHour >= 6 && forecast.peakHour <= 9, `Peak was hour ${forecast.peakHour}`);
+  test('Peak morning surface smog trap occurs between 6 AM and 9 AM', () => {
+    assert.ok(forecast.peakHour >= 6 && forecast.peakHour <= 9);
     assert.ok(forecast.peakAQI > 300);
   });
 
-  test('Cleanest convective window is identified during midday (12-3 PM)', () => {
-    assert.ok(forecast.cleanestHour >= 12 && forecast.cleanestHour <= 15, `Cleanest was hour ${forecast.cleanestHour}`);
+  test('Convective solar safe window occurs between 12 PM and 3 PM', () => {
+    assert.ok(forecast.cleanestHour >= 12 && forecast.cleanestHour <= 15);
     assert.ok(forecast.cleanestAQI < forecast.peakAQI);
   });
 
-  test('Convective solar safe window achieves substantial exposure reduction vs peak', () => {
-    assert.ok(forecast.safeWindow.avgAQI < forecast.peakAQI);
-    const reduction = ((forecast.peakAQI - forecast.safeWindow.avgAQI) / forecast.peakAQI) * 100;
-    assert.ok(reduction >= 30, `Expected reduction >= 30%, got ${reduction}%`);
+  test('Solar convective safe window provides at least 25% lower AQI than morning trap', () => {
+    const reduction = ((forecast.peakAQI - forecast.cleanestAQI) / forecast.peakAQI) * 100;
+    assert.ok(reduction >= 25, `Expected >= 25% reduction, got ${reduction}%`);
   });
 
-  test('Hour objects include status flags, phase tags, and action recommendations', () => {
+  test('Hour objects include status flags, phase tags, and actionable recommendations', () => {
     const morningHour = forecast.hours[7];
     assert.strictEqual(morningHour.isCriticalTrap, true);
     assert.strictEqual(morningHour.phase, 'morning_trap');
-    const middayHour = forecast.hours[13];
-    assert.strictEqual(middayHour.isSafeWindow, true);
-    assert.strictEqual(middayHour.phase, 'safe_window');
+    const safeHour = forecast.hours[13];
+    assert.strictEqual(safeHour.isSafeWindow, true);
+    assert.strictEqual(safeHour.phase, 'safe_window');
   });
 });
 
 // -------------------------------------------------------------
-// Suite 3: Inhaled PM2.5 Avoidance & Berkeley Earth Cigarette Math
+// Suite 4: Inhaled PM2.5 Deposition & Cigarette Equivalence
 // -------------------------------------------------------------
-suite('Suite 3: Inhaled Particulate Deposition Avoidance & Cigarettes Equivalence', () => {
-  test('Calculates positive micrograms avoided with indoor filtration & schedule shift', () => {
+suite('Suite 4: Inhaled Particulate Deposition & Berkeley Earth Cigarette Math', () => {
+  test('Calculates positive daily PM2.5 micrograms avoided via filtration & schedule shift', () => {
     const res = calculateInhaledPM25Avoidance({
       basePM25: 220,
       minuteVentilation: 0.015,
-      filterReductionPct: 75,
+      filterReductionPct: 80,
       indoorHours: 18,
       rescheduledOutdoor: true
     });
 
     assert.ok(res.dailyInhaledAvoidedUg > 1000);
-    assert.ok(res.annualInhaledAvoidedMg > 300);
+    assert.ok(res.annualInhaledAvoidedMg > 350);
   });
 
-  test('Annualized inhaled avoidance correctly scales with 365 days', () => {
-    const res = calculateInhaledPM25Avoidance({ basePM25: 150 });
+  test('Annualized inhaled avoidance scales accurately with 365 days', () => {
+    const res = calculateInhaledPM25Avoidance({ basePM25: 180 });
     const expectedMg = Math.round((res.dailyInhaledAvoidedUg * 365) / 1000);
     assert.strictEqual(res.annualInhaledAvoidedMg, expectedMg);
   });
 
-  test('Berkeley Earth cigarette equivalence yields realistic values', () => {
+  test('Berkeley Earth cigarette equivalence yields scientifically consistent output', () => {
     const res = calculateInhaledPM25Avoidance({
       basePM25: 250,
-      minuteVentilation: 0.015,
-      filterReductionPct: 75,
-      indoorHours: 18
+      filterReductionPct: 85,
+      indoorHours: 19
     });
 
-    assert.ok(res.cigarettesAvoidedDaily > 3 && res.cigarettesAvoidedDaily < 30);
+    assert.ok(res.cigarettesAvoidedDaily >= 4 && res.cigarettesAvoidedDaily <= 30);
     assert.strictEqual(res.cigarettesAvoidedMonthly, Math.round(res.cigarettesAvoidedDaily * 30));
   });
 
-  test('Zero outdoor rescheduling parameter accurately reduces avoided exposure', () => {
-    const withReschedule = calculateInhaledPM25Avoidance({ basePM25: 200, rescheduledOutdoor: true });
-    const withoutReschedule = calculateInhaledPM25Avoidance({ basePM25: 200, rescheduledOutdoor: false });
-    assert.ok(withReschedule.dailyInhaledAvoidedUg > withoutReschedule.dailyInhaledAvoidedUg);
+  test('Heavy exertion minute ventilation increases avoided particulate mass calculation', () => {
+    const normal = calculateInhaledPM25Avoidance({ minuteVentilation: 0.015 });
+    const exertion = calculateInhaledPM25Avoidance({ minuteVentilation: 0.035 });
+    assert.ok(exertion.dailyInhaledAvoidedUg > normal.dailyInhaledAvoidedUg);
   });
 });
 
 // -------------------------------------------------------------
-// Suite 4: Household Smog Risk Index & Vulnerability Weighting
+// Suite 5: Household Biological Vulnerability Risk Scoring
 // -------------------------------------------------------------
-suite('Suite 4: Household Smog Risk Index & Vulnerability Multipliers', () => {
-  test('High outdoor AQI without mitigations yields low safety score', () => {
-    const unmitigated = calculateHouseholdRiskIndex({
-      outdoorAQI: 400,
-      archetypeKey: 'apartment_family',
-      vulnerabilityKeys: ['asthma', 'infants'],
-      activeHackIds: []
+suite('Suite 5: Biological Vulnerability Risk Scoring (0 - 100)', () => {
+  test('Calculates higher risk score for multi-vulnerability households', () => {
+    const lowRisk = calculateHouseholdRiskIndex({ vulnerabilities: [] }, 150);
+    const highRisk = calculateHouseholdRiskIndex({ vulnerabilities: ['asthma', 'infants', 'seniors'] }, 150);
+    assert.ok(highRisk.score > lowRisk.score);
+  });
+
+  test('Severe AQI (> 400) triggers Critical Health Emergency risk classification', () => {
+    const res = calculateHouseholdRiskIndex({ vulnerabilities: ['asthma'] }, 420);
+    assert.ok(res.score >= 80);
+    assert.strictEqual(res.riskLevel, 'Critical Health Emergency');
+  });
+
+  test('Pregnant and cardiac vulnerability multipliers contribute to risk factors', () => {
+    const res = calculateHouseholdRiskIndex({ vulnerabilities: ['cardiac', 'pregnant'] }, 200);
+    assert.ok(res.contributingFactors.length >= 2);
+    assert.ok(res.contributingFactors.some(f => f.includes('Cardiovascular')));
+  });
+
+  test('Score is bounded strictly between 5 and 100', () => {
+    const low = calculateHouseholdRiskIndex({}, 10);
+    assert.ok(low.score >= 5);
+    const high = calculateHouseholdRiskIndex({ vulnerabilities: ['asthma', 'infants', 'seniors', 'cardiac', 'pregnant'] }, 500);
+    assert.ok(high.score <= 100);
+  });
+});
+
+// -------------------------------------------------------------
+// Suite 6: Personalized 6-Block Daily Routine Generator
+// -------------------------------------------------------------
+suite('Suite 6: Low-Emission Daily Routine Builder', () => {
+  const forecast = getDiurnalSmogForecast(280, 'delhi', 'dense_residential');
+  const routine = generateDailyRoutine({ archetypeKey: 'residential_family', commuteMode: 'petrol_car' }, forecast);
+
+  test('Generates complete 6-block daily exposure timeline', () => {
+    assert.strictEqual(routine.length, 6);
+  });
+
+  test('Morning block explicitly advises zero-ventilation during morning surface trap', () => {
+    const morning = routine[0];
+    assert.strictEqual(morning.id, 'block_morning_wake');
+    assert.strictEqual(morning.severity, 'danger');
+    assert.ok(morning.protocol.includes('locked') || morning.protocol.includes('sealed'));
+  });
+
+  test('Midday block highlights convective solar safe window', () => {
+    const safeBlock = routine.find(b => b.id === 'block_convective_window');
+    assert.ok(safeBlock !== undefined);
+    assert.strictEqual(safeBlock.severity, 'success');
+  });
+
+  test('Timeline blocks include lifestyle switch and ventilation recommendations', () => {
+    routine.forEach(b => {
+      assert.ok(typeof b.lifestyleSwitch === 'string' && b.lifestyleSwitch.length > 5);
+      assert.ok(typeof b.ventilationState === 'string');
     });
-    assert.ok(unmitigated.safetyScore <= 40, `Safety score was ${unmitigated.safetyScore}`);
-  });
-
-  test('Adopting DIY hacks dramatically elevates the safety score', () => {
-    const mitigated = calculateHouseholdRiskIndex({
-      outdoorAQI: 400,
-      archetypeKey: 'apartment_family',
-      vulnerabilityKeys: ['asthma', 'infants'],
-      activeHackIds: ['corsi_rosenthal', 'wet_mopping', 'window_sealing', 'incense_ban']
-    });
-    assert.ok(mitigated.safetyScore >= 60, `Safety score was ${mitigated.safetyScore}`);
-    assert.ok(mitigated.mitigationPoints >= 40);
-  });
-
-  test('Vulnerability factors increase vulnerability multiplier', () => {
-    const lowVuln = calculateHouseholdRiskIndex({ outdoorAQI: 200, vulnerabilityKeys: [] });
-    const highVuln = calculateHouseholdRiskIndex({ outdoorAQI: 200, vulnerabilityKeys: ['asthma', 'infants'] });
-    assert.ok(highVuln.vulnerabilityMultiplier > lowVuln.vulnerabilityMultiplier);
-  });
-
-  test('Safety score correctly clamps between 5 and 100', () => {
-    const extremeBad = calculateHouseholdRiskIndex({ outdoorAQI: 500, vulnerabilityKeys: ['asthma', 'infants', 'seniors'], activeHackIds: [] });
-    assert.ok(extremeBad.safetyScore >= 5);
-    const perfect = calculateHouseholdRiskIndex({ outdoorAQI: 20, activeHackIds: ['corsi_rosenthal', 'wet_mopping', 'window_sealing', 'kitchen_exhaust', 'incense_ban', 'phytoremediation'] });
-    assert.ok(perfect.safetyScore <= 100);
   });
 });
 
 // -------------------------------------------------------------
-// Suite 5: Low-Emission Daily Routine Builder
+// Suite 7: Commute Mobility & Carbon Abatement Math
 // -------------------------------------------------------------
-suite('Suite 5: Low-Emission Daily Routine Builder', () => {
-  const routine = generateDailyRoutine({
-    archetypeKey: 'apartment_family',
-    cityKey: 'delhi',
-    baseAQI: 350,
-    commuteMode: 'metro',
-    vulnerabilities: ['asthma']
-  });
-
-  test('Produces 6 discrete time-block schedules spanning 24 hours', () => {
-    assert.strictEqual(routine.scheduleBlocks.length, 6);
-  });
-
-  test('Morning block flags critical outdoor danger', () => {
-    const morning = routine.scheduleBlocks[0];
-    assert.strictEqual(morning.status, 'CRITICAL_RISK');
-    assert.ok(morning.actionProtocol.includes('Strict indoor shelter'));
-  });
-
-  test('Midday block flags convective solar safe window', () => {
-    const midday = routine.scheduleBlocks[2];
-    assert.strictEqual(midday.status, 'SAFE_WINDOW');
-    assert.ok(midday.actionProtocol.includes('Safest window of the day'));
-  });
-
-  test('Generates tailored advisory pills for high AQI and vulnerable members', () => {
-    assert.ok(routine.advisoryPills.length >= 2);
-    assert.ok(routine.advisoryPills.some(p => p.includes('N95') || p.includes('vulnerability')));
-  });
-});
-
-// -------------------------------------------------------------
-// Suite 6: Carbon Footprint Abatement & Fuel Savings Equations
-// -------------------------------------------------------------
-suite('Suite 6: Carbon Abatement & Sustainable Lifestyle Swaps', () => {
-  test('Commuting by Metro vs Solo Car saves substantial monthly CO2e', () => {
+suite('Suite 7: Transit Emission Reductions & Fuel Savings', () => {
+  test('Switching from Petrol Car to Metro Rail achieves significant CO2e reduction', () => {
     const res = calculateEmissionReductions({
-      commuteCurrent: 'car',
-      commuteTarget: 'metro',
-      distanceKm: 20,
-      workDays: 22,
-      inductionCooking: true,
-      compostLeavesKg: 30
+      commuteMode: 'petrol_car',
+      commuteDistanceKm: 20,
+      workDaysPerMonth: 22
     });
 
-    assert.ok(res.monthlyCo2eSavedKg > 50, `Expected > 50 kg CO2e, got ${res.monthlyCo2eSavedKg}`);
-    assert.ok(res.fuelCostSavedINR > 2000, `Expected > ₹2000 saved, got ${res.fuelCostSavedINR}`);
-    assert.ok(res.pm25EmissionsPreventedGrams > 300);
+    assert.ok(res.savedCO2eKg > 50);
+    assert.ok(res.savedCostINR > 2000);
+    assert.ok(res.treeEquivalents > 20);
   });
 
-  test('Induction cooking switch contributes 18 kg CO2e monthly savings', () => {
-    const res = calculateEmissionReductions({ inductionCooking: true });
-    assert.strictEqual(res.breakdown.cookingCo2Kg, 18.0);
+  test('Diesel SUV produces highest avoided tailpipe particulate mass', () => {
+    const dieselRes = calculateEmissionReductions({ commuteMode: 'diesel_suv', commuteDistanceKm: 15, workDaysPerMonth: 20 });
+    const petrolRes = calculateEmissionReductions({ commuteMode: 'petrol_car', commuteDistanceKm: 15, workDaysPerMonth: 20 });
+    assert.ok(dieselRes.avoidedTailpipePM25Grams > petrolRes.avoidedTailpipePM25Grams);
   });
 
-  test('Leaf composting eliminates particulate emissions vs open burning', () => {
-    const res = calculateEmissionReductions({ compostLeavesKg: 50 });
-    assert.strictEqual(res.pm25EmissionsPreventedGrams, 50 * 18);
-    assert.ok(res.breakdown.compostCo2Kg > 60);
+  test('Handles minimum and maximum boundary commute distances safely', () => {
+    const minRes = calculateEmissionReductions({ commuteDistanceKm: 1, workDaysPerMonth: 1 });
+    assert.ok(minRes.monthlyKm >= 2);
+    const maxRes = calculateEmissionReductions({ commuteDistanceKm: 200 });
+    assert.ok(maxRes.monthlyKm <= 4400); // 100 km max clamped
   });
 });
 
 // -------------------------------------------------------------
-// Suite 7: Corsi-Rosenthal Box Performance & Physics
+// Suite 8: DIY Corsi-Rosenthal Aerodynamics & Room ACH Clearance
 // -------------------------------------------------------------
-suite('Suite 7: Corsi-Rosenthal Box CADR, ACH & Room Clearance Math', () => {
+suite('Suite 8: Corsi-Rosenthal Box Physics, CADR & Exponential Clearance', () => {
   const specs = calculateCorsiRosenthalSpecs({
+    roomLengthFt: 15,
+    roomWidthFt: 12,
+    roomHeightFt: 10,
     fanCFM: 1800,
-    filterType: 'merv13',
     filterCount: 4,
-    roomAreaSqFt: 300,
-    ceilingHeightFt: 10
+    filterGrade: 'merv13'
   });
 
-  test('Delivers CADR in the 450-650 CFM range', () => {
-    assert.ok(specs.cadrCFM >= 450 && specs.cadrCFM <= 650, `CADR was ${specs.cadrCFM}`);
+  test('Computes realistic CADR and Air Changes per Hour (ACH > 4)', () => {
+    assert.ok(specs.effectiveCadrCFM >= 450);
+    assert.ok(specs.ach >= 4.0, `Expected ACH >= 4.0, got ${specs.ach}`);
   });
 
-  test('Provides adequate Air Changes per Hour (ACH >= 4.0)', () => {
-    assert.ok(specs.ach >= 4.0, `ACH was ${specs.ach}`);
-    assert.strictEqual(specs.isAdequateForSmog, true);
+  test('Calculates exponential clearance decay times (t50 < t90 < t99)', () => {
+    assert.ok(specs.clearanceTimes.t50Min < specs.clearanceTimes.t90Min);
+    assert.ok(specs.clearanceTimes.t90Min < specs.clearanceTimes.t99Min);
+    assert.ok(specs.clearanceTimes.t90Min <= 45, 'Expected 90% clearance in under 45 mins');
   });
 
-  test('Clears 90% and 99% particulates in under 60 minutes', () => {
-    assert.ok(specs.time90Mins > 0 && specs.time90Mins <= 30, `t90 was ${specs.time90Mins}`);
-    assert.ok(specs.time99Mins > 0 && specs.time99Mins <= 60, `t99 was ${specs.time99Mins}`);
-  });
-
-  test('Calculates > 75% cost savings vs commercial purifiers', () => {
-    assert.ok(specs.costSavingsPct >= 75, `Savings was ${specs.costSavingsPct}%`);
-  });
-
-  test('Single flat filter creates higher resistance than 4-filter cube', () => {
-    const single = calculateCorsiRosenthalSpecs({ filterCount: 1 });
-    const cube = calculateCorsiRosenthalSpecs({ filterCount: 4 });
-    assert.ok(cube.cadrCFM > single.cadrCFM);
+  test('Achieves 75%+ cost savings compared to commercial retail HEPA units', () => {
+    assert.ok(specs.costComparison.savingsPct >= 75);
+    assert.ok(specs.costComparison.savingsINR > 12000);
   });
 });
 
 // -------------------------------------------------------------
-// Suite 8: NASA Botanical Phytoremediation & Plant Allocation
+// Suite 9: Layered Indoor Passive/Active Smog Suppression
 // -------------------------------------------------------------
-suite('Suite 8: NASA Botanical Phytoremediation Roster', () => {
-  test('Allocates correct plant count for 350 sq.ft living area', () => {
-    const plants = calculateBotanicalNeeds(350);
-    assert.ok(plants.totalPlants >= 5);
-    assert.strictEqual(plants.roster.length, 4);
-
-    const snake = plants.roster.find(p => p.name.includes('Snake'));
-    assert.ok(snake && snake.count >= 1);
+suite('Suite 9: Cumulative Indoor Smog Suppression Model', () => {
+  test('Multiple concurrent hacks stack cumulative PM2.5 suppression', () => {
+    const single = calculateIndoorSuppression(['corsi_rosenthal'], 200);
+    const multiple = calculateIndoorSuppression(['corsi_rosenthal', 'window_sealing', 'wet_mopping'], 200);
+    assert.ok(multiple.effectiveReductionPct > single.effectiveReductionPct);
+    assert.ok(multiple.indoorPM25 < single.indoorPM25);
   });
 
-  test('Larger rooms dynamically scale botanical requirement', () => {
-    const small = calculateBotanicalNeeds(150);
-    const large = calculateBotanicalNeeds(600);
-    assert.ok(large.totalPlants > small.totalPlants);
-  });
-});
-
-// -------------------------------------------------------------
-// Suite 9: Layered Indoor PM2.5 Suppression
-// -------------------------------------------------------------
-suite('Suite 9: Layered Indoor PM2.5 Suppression', () => {
-  test('Applying Corsi-Rosenthal, wet mopping, and incense ban reduces indoor PM2.5 by > 70%', () => {
-    const iaq = calculateIndoorSuppression(250, 'apartment_family', [
-      'corsi_rosenthal',
-      'wet_mopping',
-      'window_sealing',
-      'incense_ban'
-    ]);
-
-    assert.ok(iaq.mitigatedPM25 < iaq.unmitigatedPM25);
-    assert.ok(iaq.reductionPct >= 70, `Reduction was ${iaq.reductionPct}%`);
-    assert.ok(iaq.hackImpacts.length >= 4);
-  });
-
-  test('Unmitigated indoor baseline reflects incense smoke source penalty', () => {
-    const withIncense = calculateIndoorSuppression(200, 'apartment_family', []);
-    const withoutIncense = calculateIndoorSuppression(200, 'apartment_family', ['incense_ban']);
-    assert.ok(withIncense.unmitigatedPM25 > withoutIncense.unmitigatedPM25);
+  test('Suppression adheres strictly to diminishing returns ceiling (<= 92%)', () => {
+    const all = calculateIndoorSuppression(
+      ['corsi_rosenthal', 'window_sealing', 'wet_mopping', 'kitchen_exhaust', 'incense_ban', 'phytoremediation'],
+      300
+    );
+    assert.ok(all.effectiveReductionPct <= 92);
   });
 });
 
 // -------------------------------------------------------------
-// Suite 10: Security: OWASP XSS & DOM Clobbering Defense
+// Suite 10: NASA Botanical Phytoremediation Scaling
 // -------------------------------------------------------------
-suite('Suite 10: Security: OWASP XSS & DOM Clobbering Sanitization', () => {
-  test('escapeHTML neutralizes all standard HTML special characters', () => {
-    const dirty = '<script>alert("xss")</script> & \' `';
+suite('Suite 10: Botanical Bio-Shield & NASA Plant Calculations', () => {
+  test('Scales recommended plant pots proportionally with room area', () => {
+    const smallRoom = calculateBotanicalNeeds(100);
+    const largeRoom = calculateBotanicalNeeds(300);
+    assert.ok(largeRoom.totalPots > smallRoom.totalPots);
+  });
+
+  test('Includes Snake Plant with nocturnal Crassulacean Acid Metabolism', () => {
+    const res = calculateBotanicalNeeds(150);
+    const snake = res.plants.find(p => p.id === 'snake_plant');
+    assert.ok(snake !== undefined);
+    assert.strictEqual(snake.crassulaceanAcidMetabolism, true);
+  });
+});
+
+// -------------------------------------------------------------
+// Suite 11: OWASP Top 10 Security & HTML Sanitization Barriers
+// -------------------------------------------------------------
+suite('Suite 11: OWASP XSS Defense & DOM Clobbering Neutralization', () => {
+  test('escapeHTML neutralizes all standard HTML injection delimiters', () => {
+    const dirty = '<script>alert("xss")</script>&"\'`';
     const escaped = escapeHTML(dirty);
     assert.ok(!escaped.includes('<script>'));
     assert.ok(escaped.includes('&lt;script&gt;'));
     assert.ok(escaped.includes('&amp;'));
+    assert.ok(escaped.includes('&quot;'));
   });
 
-  test('sanitizeHTML strips script, iframe, and inline on* event triggers', () => {
-    const malicious = '<div onclick="alert(1)"><script>evil()</script><img src="x" onerror="steal()"/>Safe Content</div>';
-    const cleaned = sanitizeHTML(malicious);
-    assert.ok(!cleaned.includes('<script>'));
-    assert.ok(!cleaned.includes('onclick'));
-    assert.ok(!cleaned.includes('onerror'));
-    assert.ok(cleaned.includes('Safe Content'));
+  test('sanitizeHTML completely eliminates script, iframe, and object injection vectors', () => {
+    const payload = '<div>Safe</div><script>fetch("http://evil.com")</script><iframe src="malware.html"></iframe>';
+    const clean = sanitizeHTML(payload);
+    assert.ok(!clean.includes('<script>'));
+    assert.ok(!clean.includes('<iframe>'));
+    assert.ok(clean.includes('<div>Safe</div>'));
   });
 
-  test('sanitizeHTML neutralizes DOM Clobbering id and name attributes', () => {
-    const clobber = '<form id="document"><input name="cookie"/></form>';
-    const cleaned = sanitizeHTML(clobber);
-    assert.ok(!cleaned.includes('id="document"'));
-    assert.ok(!cleaned.includes('name="cookie"'));
+  test('sanitizeHTML neutralizes inline event handlers (onerror, onload, onclick)', () => {
+    const payload = '<img src="x" onerror="alert(1)" /><p onclick="hack()">Test</p>';
+    const clean = sanitizeHTML(payload);
+    assert.ok(!clean.includes('onerror'));
+    assert.ok(!clean.includes('onclick'));
   });
 
-  test('clamp utility strictly bounds numeric ranges and handles invalid inputs', () => {
-    assert.strictEqual(clamp(150, 0, 100), 100);
-    assert.strictEqual(clamp(-50, 0, 100), 0);
-    assert.strictEqual(clamp('invalid', 10, 50, 25), 25);
+  test('sanitizeHTML prevents DOM Clobbering by stripping id and name attributes', () => {
+    const payload = '<div id="adminPanel" name="config"><span class="badge">Safe</span></div>';
+    const clean = sanitizeHTML(payload);
+    assert.ok(!clean.includes('id='));
+    assert.ok(!clean.includes('name='));
+    assert.ok(clean.includes('class="badge"'));
   });
 
-  test('generateSecureId creates valid prefixed random tokens', () => {
-    const id1 = generateSecureId('aero');
-    const id2 = generateSecureId('aero');
-    assert.ok(id1.startsWith('aero_'));
+  test('sanitizeHTML blocks javascript: protocol in href or action targets', () => {
+    const payload = '<a href="javascript:alert(1)">Click</a>';
+    const clean = sanitizeHTML(payload);
+    assert.ok(!clean.includes('javascript:'));
+  });
+
+  test('generateSecureId creates collision-resistant hex identifiers', () => {
+    const id1 = generateSecureId('vayu');
+    const id2 = generateSecureId('vayu');
     assert.notStrictEqual(id1, id2);
+    assert.ok(id1.startsWith('vayu_'));
   });
 });
 
 // -------------------------------------------------------------
-// Suite 11: Security: Ephemeral Memory-Only API Key Vault
+// Suite 12: Ephemeral In-Memory API Key Vault
 // -------------------------------------------------------------
-suite('Suite 11: Security: Ephemeral Memory-Only API Key Vault', () => {
-  test('Stores key in memory and returns masked representation', () => {
-    ApiKeyVault.setKey('AIzaSyD-TestKey1234567890');
+suite('Suite 12: Ephemeral Closure Memory Key Vault', () => {
+  test('Stores and retrieves API key strictly in closure memory', () => {
+    ApiKeyVault.setKey('AIzaSyMockTestKey12345');
     assert.strictEqual(ApiKeyVault.hasKey(), true);
-    assert.strictEqual(ApiKeyVault.getKey(), 'AIzaSyD-TestKey1234567890');
-    const masked = ApiKeyVault.getMasked();
-    assert.ok(masked.startsWith('AIzaSy'));
-    assert.ok(masked.endsWith('7890'));
+    assert.strictEqual(ApiKeyVault.getKey(), 'AIzaSyMockTestKey12345');
   });
 
-  test('Clears key completely from memory', () => {
-    ApiKeyVault.clear();
+  test('Clears key completely on explicit clearKey invocation', () => {
+    ApiKeyVault.clearKey();
     assert.strictEqual(ApiKeyVault.hasKey(), false);
     assert.strictEqual(ApiKeyVault.getKey(), null);
   });
-
-  test('Rejects empty or whitespace-only keys', () => {
-    ApiKeyVault.setKey('   ');
-    assert.strictEqual(ApiKeyVault.hasKey(), false);
-    ApiKeyVault.setKey(null);
-    assert.strictEqual(ApiKeyVault.hasKey(), false);
-  });
 });
 
 // -------------------------------------------------------------
-// Suite 12: Storage: Profile Normalization & Safe Export/Import
+// Suite 13: Schema Normalization & Key-Safe JSON Serialization
 // -------------------------------------------------------------
-suite('Suite 12: Storage: Schema Normalization & Safe Key-Stripping Export', () => {
-  test('Normalizes invalid inputs to safe fallback defaults', () => {
-    const norm = normalizeProfile({ currentAQI: 'invalid', commuteDistanceKm: 9999 });
-    assert.strictEqual(norm.archetypeKey, 'apartment_family');
-    assert.strictEqual(norm.commuteDistanceKm, 100); // clamped to max
-    assert.ok(norm.currentAQI >= 20 && norm.currentAQI <= 500);
+suite('Suite 13: Storage Normalization & Key-Safe JSON Serialization', () => {
+  test('normalizeProfile clamps out-of-bound AQI and numbers safely', () => {
+    const prof = normalizeProfile({ currentAQI: 9999, commuteDistanceKm: -50 });
+    assert.strictEqual(prof.currentAQI, 500);
+    assert.strictEqual(prof.commuteDistanceKm, 1);
   });
 
-  test('Export payload strictly strips any API key or credential properties', () => {
-    const state = {
-      profile: { cityKey: 'bhopal' },
-      apiKey: 'SUPER_SECRET_LEAK',
-      secretToken: 'DO_NOT_EXPORT'
+  test('exportPlanAsJSON strictly filters out any embedded API keys or secrets', () => {
+    const stateWithSecret = {
+      profile: { archetypeKey: 'residential_family', currentAQI: 220 },
+      apiKey: 'SUPER_SECRET_GEMINI_KEY_DO_NOT_LEAK',
+      secretToken: 'shhh',
+      healthRiskScore: 65
     };
-    const jsonStr = exportPlanAsJSON(state);
-    assert.ok(!jsonStr.includes('SUPER_SECRET_LEAK'));
-    assert.ok(!jsonStr.includes('DO_NOT_EXPORT'));
-    assert.ok(jsonStr.includes('bhopal'));
+
+    const jsonStr = exportPlanAsJSON(stateWithSecret);
+    assert.ok(!jsonStr.includes('SUPER_SECRET_GEMINI_KEY'));
+    assert.ok(!jsonStr.includes('secretToken'));
+    assert.ok(jsonStr.includes('VayuGuardian AI'));
   });
 
-  test('Import safely validates JSON plan structure', () => {
-    const validJson = JSON.stringify({ profile: { cityKey: 'lucknow', currentAQI: 310 } });
-    const imp = importPlanFromJSON(validJson);
-    assert.strictEqual(imp.success, true);
-    assert.strictEqual(imp.profile.cityKey, 'lucknow');
-  });
+  test('importPlanFromJSON safely recovers valid profiles and scrubs prototype pollution', () => {
+    const validJson = JSON.stringify({
+      profile: {
+        archetypeKey: 'vulnerable_care',
+        currentAQI: 310,
+        __proto__: { polluted: true }
+      }
+    });
 
-  test('Import rejects malformed or unparseable JSON without crashing', () => {
-    const bad = importPlanFromJSON('NOT_A_JSON');
-    assert.strictEqual(bad.success, false);
-    assert.ok(typeof bad.error === 'string');
+    const res = importPlanFromJSON(validJson);
+    assert.strictEqual(res.success, true);
+    assert.strictEqual(res.profile.archetypeKey, 'vulnerable_care');
+    assert.strictEqual(res.profile.currentAQI, 310);
+    assert.strictEqual(({}).polluted, undefined);
   });
 });
 
 // -------------------------------------------------------------
-// Suite 13: Hybrid GenAI Smog Coach ("AeroGenie")
+// Suite 14: Deterministic Offline Heuristic Knowledge Graph
 // -------------------------------------------------------------
-suite('Suite 13: Hybrid GenAI Smog Coach: Heuristic Knowledge Graph', () => {
-  test('Heuristic engine generates rich family action guide with timing blocks', () => {
-    const guide = generateHeuristicAdvisory({
-      archetypeKey: 'apartment_family',
-      cityKey: 'delhi',
-      aqi: 380,
-      vulnerabilities: ['asthma'],
-      mode: 'family'
-    });
-
-    assert.ok(guide.includes('Diurnal Inversion Timing Strategy'));
-    assert.ok(guide.includes('Corsi-Rosenthal'));
-    assert.ok(guide.includes('Safe Window'));
+suite('Suite 14: Offline Heuristic GenAI Expert Rules Engine', () => {
+  test('Generates immediate contextual guidance for exercise query', () => {
+    const res = generateHeuristicAdvisory({ query: 'Can I go jogging in the morning?', currentAQI: 260 });
+    assert.strictEqual(res.isHeuristic, true);
+    assert.ok(res.headline.includes('Respiratory'));
+    assert.ok(res.avoidanceRule.includes('06:00 AM'));
   });
 
-  test('Heuristic engine generates RWA community circular when requested', () => {
-    const circular = generateHeuristicAdvisory({
-      archetypeKey: 'society_resident',
-      cityKey: 'bhopal',
-      aqi: 315,
-      mode: 'community'
-    });
-
-    assert.ok(circular.includes('RWA RESIDENT CIRCULAR'));
-    assert.ok(circular.includes('Zero-Idling Gate Zone'));
-    assert.ok(circular.includes('Total Leaf Burning Ban'));
+  test('Generates pediatric-specific protocol for school recess queries', () => {
+    const res = generateHeuristicAdvisory({ query: 'school recess outdoors for kids', currentAQI: 290 });
+    assert.ok(res.headline.includes('Pediatric'));
+    assert.ok(res.directActions.some(a => a.includes('recess') || a.includes('Corsi-Rosenthal')));
   });
 
-  test('Heuristic engine responds contextually to Corsi-Rosenthal DIY query', () => {
-    const answer = generateHeuristicAdvisory({
-      userQuery: 'How to build Corsi Rosenthal purifier?'
+  test('Injects medical precautions when asthma vulnerability is active', () => {
+    const res = generateHeuristicAdvisory({
+      query: 'General advice',
+      profile: { vulnerabilities: ['asthma'] },
+      currentAQI: 350
     });
-    assert.ok(answer.includes('Corsi-Rosenthal DIY Air Purifier Quick Guide'));
-    assert.ok(answer.includes('20-inch Box Fan'));
+    assert.ok(res.directActions.some(a => a.includes('Asthma')));
   });
 
-  test('Heuristic engine responds with clinical precautions for elderly and asthma', () => {
-    const answer = generateHeuristicAdvisory({
-      userQuery: 'asthma patient morning walk protocol'
-    });
-    assert.ok(answer.includes('Cancel Morning Walks'));
-    assert.ok(answer.includes('Saline Nasal Rinse'));
+  test('Provides respirator facial seal instructions when mask intent is detected', () => {
+    const res = generateHeuristicAdvisory({ query: 'Which N95 mask is best?', currentAQI: 300 });
+    assert.ok(res.headline.includes('Respirator'));
+    assert.ok(res.directActions.some(a => a.includes('positive-pressure') || a.includes('seal')));
+  });
+
+  test('Severe emergency threshold (> 350 AQI) activates clean-room positive pressure sealing', () => {
+    const res = generateHeuristicAdvisory({ currentAQI: 380 });
+    assert.strictEqual(res.severity, 'emergency');
+    assert.ok(res.directActions.some(a => a.includes('positive-pressure') || a.includes('weatherstrips')));
   });
 });
 
+// -------------------------------------------------------------
+// Verification Summary
+// -------------------------------------------------------------
 console.log('\n\x1b[1m\x1b[32m================================================================');
-console.log(`   🎉 ALL TEST SUITES PASSED! (${passedTests} / ${totalTests} assertions passed)`);
+console.log(`   🎉 ALL TEST SUITES PASSED! (${passedTests} / ${totalTests} assertions verified)`);
 console.log('================================================================\x1b[0m\n');

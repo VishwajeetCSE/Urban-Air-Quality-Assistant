@@ -1,154 +1,95 @@
 /**
- * @fileoverview Security, Sanitization, Memory-Only Vault, and Safe DOM Helpers
+ * @fileoverview OWASP Top 10 Security Architecture & Memory-Only Key Vault
+ * Enforces XSS defense, DOM clobbering immunity, numeric boundary validation,
+ * and ephemeral closure-based API credential storage.
  * @module security
- * @author Vishwajeet Kumar
+ * @author Vishwajeet Kumar (VishwajeetCSE)
  * @license MIT
  */
 
 /**
- * Ephemeral In-Memory API Key Vault
- * Stored strictly in module closure RAM. Never written to localStorage,
- * sessionStorage, cookies, IndexedDB, or serialized state exports.
+ * Whitelist of safe HTML elements allowed in rendered output
+ * All script, iframe, object, embed, style, and form tags are strictly excluded.
  */
-const _vault = {
-  key: null,
-  timestamp: null
-};
-
-export const ApiKeyVault = {
-  /**
-   * Set API key in ephemeral memory
-   * @param {string|null} key
-   */
-  setKey(key) {
-    if (typeof key !== 'string') {
-      this.clear();
-      return;
-    }
-    const clean = key.trim();
-    if (!clean) {
-      this.clear();
-      return;
-    }
-    _vault.key = clean;
-    _vault.timestamp = Date.now();
-  },
-
-  /**
-   * Get the active API key
-   * @returns {string|null}
-   */
-  getKey() {
-    return _vault.key;
-  },
-
-  /**
-   * Check if a valid API key exists
-   * @returns {boolean}
-   */
-  hasKey() {
-    return typeof _vault.key === 'string' && _vault.key.length > 5;
-  },
-
-  /**
-   * Masked display string for UI display (e.g. AIzaSy...94zQ)
-   * @returns {string}
-   */
-  getMasked() {
-    if (!this.hasKey()) return 'Offline Heuristic Engine Active';
-    const k = _vault.key;
-    if (k.length > 8) {
-      return `${k.slice(0, 6)}••••••••${k.slice(-4)}`;
-    }
-    return '••••••••';
-  },
-
-  /**
-   * Wipe key from memory
-   */
-  clear() {
-    _vault.key = null;
-    _vault.timestamp = null;
-  }
-};
+const SAFE_TAGS = new Set([
+  'b', 'strong', 'i', 'em', 'u', 'span', 'p', 'div', 'ul', 'ol', 'li',
+  'table', 'thead', 'tbody', 'tr', 'th', 'td', 'code', 'pre', 'h1', 'h2',
+  'h3', 'h4', 'h5', 'h6', 'hr', 'br', 'small', 'blockquote', 'svg', 'path', 'circle', 'rect'
+]);
 
 /**
- * Escapes raw strings for safe HTML text rendering
- * Defends against basic & advanced reflected XSS
- * @param {string} str
- * @returns {string}
+ * Whitelist of allowed HTML attributes
+ * Inline event handlers (on*), style injections, and script targets are eliminated.
  */
-export function escapeHTML(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
+const SAFE_ATTRS = new Set([
+  'class', 'data-action', 'data-id', 'data-status', 'data-category', 'data-pollutant',
+  'aria-label', 'aria-hidden', 'aria-describedby', 'aria-expanded', 'aria-selected',
+  'role', 'tabindex', 'title', 'viewbox', 'fill', 'stroke', 'stroke-width', 'd', 'cx', 'cy', 'r', 'width', 'height'
+]);
+
+/**
+ * Escapes plain text strings for safe HTML body interpolation
+ * @param {unknown} val
+ * @returns {string} Clean HTML-escaped string
+ */
+export function escapeHTML(val) {
+  if (val === null || val === undefined) return '';
+  return String(val)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/`/g, '&#96;');
+    .replace(/'/g, '&#x27;')
+    .replace(/`/g, '&#x60;');
 }
 
 /**
- * Clamps numeric values strictly within bounds
- * @param {number|string} val
+ * Enforces strict numerical limits, NaN protection, and fallback safety
+ * @param {unknown} val
  * @param {number} min
  * @param {number} max
- * @param {number} [fallback=min]
- * @returns {number}
+ * @param {number} fallback
+ * @returns {number} Clamped valid numeric value
  */
-export function clamp(val, min, max, fallback = min) {
-  const n = Number(val);
-  if (isNaN(n) || !isFinite(n)) return fallback;
-  return Math.min(max, Math.max(min, n));
+export function clamp(val, min, max, fallback) {
+  const num = typeof val === 'number' ? val : parseFloat(val);
+  if (Number.isNaN(num) || !Number.isFinite(num)) {
+    return fallback;
+  }
+  return Math.min(Math.max(num, min), max);
 }
 
 /**
- * Whitelist of allowed HTML tags for rich formatted advisories
- */
-const SAFE_TAGS = new Set([
-  'p', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'span',
-  'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'table',
-  'thead', 'tbody', 'tr', 'th', 'td', 'code', 'pre', 'blockquote',
-  'hr', 'sub', 'sup', 'mark'
-]);
-
-/**
- * Whitelist of allowed safe attributes (strictly excluding DOM clobbering id and name)
- */
-const SAFE_ATTRS = new Set([
-  'class', 'title', 'role', 'aria-label', 'aria-hidden', 'aria-live', 'data-status'
-]);
-
-/**
- * Sanitizes dirty HTML strings against Mutation XSS (mXSS) and DOM Clobbering
- * Works in both browser DOM and Node.js testing environments without dependencies.
+ * Rigorous multi-stage HTML sanitizer:
+ * 1. Strips dangerous script / iframe blocks completely.
+ * 2. Neutralizes javascript: and data: URI vectors.
+ * 3. Strips all inline event handlers (onload, onerror, onclick, etc.).
+ * 4. DOM Clobbering Defense: Strips 'id=' and 'name=' to prevent window.* hijacking.
+ * 5. Tag and attribute whitelist filtering.
+ *
  * @param {string} dirtyHtml
- * @returns {string}
+ * @returns {string} Sanitized markup string
  */
 export function sanitizeHTML(dirtyHtml) {
   if (typeof dirtyHtml !== 'string') return '';
   if (!dirtyHtml.trim()) return '';
 
-  // 1. Strip dangerous executable containers
-  let clean = dirtyHtml
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
-    .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
-    .replace(/<base\b[^>]*>/gi, '')
-    .replace(/<meta\b[^>]*>/gi, '');
+  let clean = dirtyHtml;
 
-  // 2. Strip inline event handlers (on*), javascript pseudo-protocols, and data URIs
-  clean = clean.replace(/on[a-z]+\s*=\s*(['"]).*?\1/gi, '');
-  clean = clean.replace(/on[a-z]+\s*=\s*[^>\s]+/gi, '');
-  clean = clean.replace(/javascript\s*:/gi, 'blocked-js:');
-  clean = clean.replace(/vbscript\s*:/gi, 'blocked-vb:');
-  clean = clean.replace(/data\s*:\s*text\/html/gi, 'blocked-data:');
+  // 1. Strip active executable blocks
+  clean = clean.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  clean = clean.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
+  clean = clean.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '');
+  clean = clean.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '');
 
-  // 3. DOM Clobbering Defense: Strip 'id=' and 'name=' to prevent window.* hijacking
+  // 2. Neutralize protocol exploits & event handlers
+  clean = clean.replace(/javascript\s*:/gi, 'blocked:');
+  clean = clean.replace(/vbscript\s*:/gi, 'blocked:');
+  clean = clean.replace(/data\s*:\s*text\/html/gi, 'blocked:');
+  clean = clean.replace(/\son[a-z]+\s*=\s*(['"]).*?\1/gi, '');
+  clean = clean.replace(/\son[a-z]+\s*=\s*[^>\s]+/gi, '');
+
+  // 3. DOM Clobbering Defense: Strip 'id=' and 'name='
   clean = clean.replace(/\b(id|name)\s*=\s*(['"]).*?\2/gi, '');
   clean = clean.replace(/\b(id|name)\s*=\s*[^>\s]+/gi, '');
 
@@ -159,7 +100,6 @@ export function sanitizeHTML(dirtyHtml) {
 
     if (match.startsWith('</')) return `</${tag}>`;
 
-    // Filter attributes against allowed whitelist
     let safeAttrs = '';
     const attrRegex = /([a-z0-9_-]+)(?:\s*=\s*(?:'([^']*)'|"([^"]*)"|([^>\s]+)))?/gi;
     let m;
@@ -180,32 +120,76 @@ export function sanitizeHTML(dirtyHtml) {
 
 /**
  * Safely inserts sanitized HTML into a DOM container element
- * Prevents direct unsafe innerHTML assignments
+ * Prevents direct unsafe innerHTML assignments throughout UI orchestrator
  * @param {HTMLElement} container
  * @param {string} htmlContent
  */
 export function setSanitizedHTML(container, htmlContent) {
   if (!container) return;
   const clean = sanitizeHTML(htmlContent);
-  // safe: use sanitized HTML insertion
-  container.innerHTML = clean;
+  container.innerHTML = clean; // safe: sanitized via whitelist
 }
 
 /**
  * Generates cryptographically secure unique identifiers
- * Works in modern browsers (crypto.getRandomValues) and Node.js
- * @param {string} [prefix='aero']
+ * Works in modern browsers and Node.js runtime environments
+ * @param {string} [prefix='vayu']
  * @returns {string}
  */
-export function generateSecureId(prefix = 'aero') {
+export function generateSecureId(prefix = 'vayu') {
   let randomHex = '';
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     const bytes = new Uint8Array(8);
     crypto.getRandomValues(bytes);
     randomHex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
   } else {
-    // Fallback for edge runtime
     randomHex = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
   }
   return `${prefix}_${randomHex}`;
 }
+
+/**
+ * Ephemeral In-Memory API Key Vault
+ * API keys are held strictly in closure memory and are NEVER persisted to
+ * localStorage, sessionStorage, IndexedDB, cookies, or serialized state exports.
+ */
+export const ApiKeyVault = (() => {
+  let _ephemeralKey = null;
+
+  return {
+    /**
+     * Stores key in runtime closure memory
+     * @param {string} key
+     */
+    setKey(key) {
+      if (typeof key === 'string' && key.trim().length > 0) {
+        _ephemeralKey = key.trim();
+      } else {
+        _ephemeralKey = null;
+      }
+    },
+
+    /**
+     * Retrieves key for direct authenticated request
+     * @returns {string|null}
+     */
+    getKey() {
+      return _ephemeralKey;
+    },
+
+    /**
+     * Checks if key is currently active
+     * @returns {boolean}
+     */
+    hasKey() {
+      return Boolean(_ephemeralKey && _ephemeralKey.length > 5);
+    },
+
+    /**
+     * Wipes key immediately from memory
+     */
+    clearKey() {
+      _ephemeralKey = null;
+    }
+  };
+})();

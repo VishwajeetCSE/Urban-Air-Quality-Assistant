@@ -1,17 +1,17 @@
 /**
- * @fileoverview Storage Management, Schema Normalization, Sanitization, and Key-Safe Import/Export
+ * @fileoverview Storage Management, Schema Normalization, Sanitization, and Key-Safe Export
  * @module storage
- * @author Vishwajeet Kumar
+ * @author Vishwajeet Kumar (VishwajeetCSE)
  * @license MIT
  */
 
 import { clamp, escapeHTML } from './security.js';
-import { ARCHETYPES, HOTSPOT_CITIES, COMMUTE_MODES } from './constants.js';
+import { ARCHETYPES, HOTSPOT_CITIES, MICRO_ZONES, COMMUTE_MODES } from './constants.js';
 
-const STORAGE_KEY = 'aeroshield_user_profile_v1';
+const STORAGE_KEY = 'vayuguardian_user_profile_v1';
 
 /**
- * Validates and normalizes user profile inputs to prevent prototype pollution or invalid states
+ * Validates, scrubs, and normalizes user profile inputs to prevent prototype pollution or invalid states
  * @param {object} raw
  * @returns {object} Clean normalized profile
  */
@@ -20,28 +20,37 @@ export function normalizeProfile(raw = {}) {
     raw = {};
   }
 
-  const archetypeKey = ARCHETYPES[raw.archetypeKey] ? raw.archetypeKey : 'apartment_family';
+  const archetypeKey = ARCHETYPES[raw.archetypeKey] ? raw.archetypeKey : 'residential_family';
+  const microZoneKey = MICRO_ZONES[raw.microZoneKey] ? raw.microZoneKey : 'dense_residential';
   const cityKey = HOTSPOT_CITIES[raw.cityKey] ? raw.cityKey : 'delhi';
   const commuteMode = COMMUTE_MODES[raw.commuteMode] ? raw.commuteMode : 'metro';
-  const currentAQI = clamp(raw.currentAQI, 20, 500, HOTSPOT_CITIES[cityKey].baseAQI);
+
+  const defaultCityAQI = HOTSPOT_CITIES[cityKey] ? HOTSPOT_CITIES[cityKey].baseAQI : 260;
+  const currentAQI = clamp(raw.currentAQI, 20, 500, defaultCityAQI);
 
   // Validate vulnerabilities array against known factors
-  const validVulns = new Set(['asthma', 'infants', 'seniors', 'pregnant']);
+  const validVulns = new Set(['asthma', 'infants', 'seniors', 'cardiac', 'pregnant']);
   const vulnerabilities = Array.isArray(raw.vulnerabilities)
     ? raw.vulnerabilities.filter(v => typeof v === 'string' && validVulns.has(v))
-    : [];
+    : ['asthma', 'infants'];
 
   // Validate active hacks array
-  const validHacks = new Set(['corsi_rosenthal', 'window_sealing', 'wet_mopping', 'kitchen_exhaust', 'phytoremediation', 'incense_ban']);
+  const validHacks = new Set(['corsi_rosenthal', 'window_sealing', 'wet_mopping', 'kitchen_exhaust', 'incense_ban', 'phytoremediation']);
   const activeHacks = Array.isArray(raw.activeHacks)
     ? raw.activeHacks.filter(h => typeof h === 'string' && validHacks.has(h))
-    : ['corsi_rosenthal', 'wet_mopping', 'incense_ban'];
+    : ['corsi_rosenthal', 'window_sealing', 'wet_mopping', 'incense_ban'];
 
   const commuteDistanceKm = clamp(raw.commuteDistanceKm, 1, 100, 15);
   const workDaysPerMonth = clamp(raw.workDaysPerMonth, 1, 31, 22);
 
+  // Room geometry parameters for DIY calculations
+  const roomLengthFt = clamp(raw.roomLengthFt, 6, 60, 15);
+  const roomWidthFt = clamp(raw.roomWidthFt, 6, 60, 12);
+  const roomHeightFt = clamp(raw.roomHeightFt, 7, 20, 10);
+
   return {
     archetypeKey,
+    microZoneKey,
     cityKey,
     commuteMode,
     currentAQI,
@@ -49,6 +58,9 @@ export function normalizeProfile(raw = {}) {
     activeHacks,
     commuteDistanceKm,
     workDaysPerMonth,
+    roomLengthFt,
+    roomWidthFt,
+    roomHeightFt,
     updatedAt: new Date().toISOString()
   };
 }
@@ -63,14 +75,15 @@ export function exportPlanAsJSON(appState = {}) {
   const normalized = normalizeProfile(appState.profile || {});
 
   const exportPayload = {
-    app: 'AeroShield AI — Urban Air Quality Assistant',
+    app: 'VayuGuardian AI — Hyperlocal Urban Clean Air Defense System',
     version: '1.0.0',
     exportedAt: new Date().toISOString(),
     profile: normalized,
     calculations: {
       healthRiskScore: appState.healthRiskScore || null,
       dailyInhaledAvoidedUg: appState.dailyInhaledAvoidedUg || null,
-      monthlyCo2eSavedKg: appState.monthlyCo2eSavedKg || null
+      monthlyCo2eSavedKg: appState.monthlyCo2eSavedKg || null,
+      diyCadrCFM: appState.diyCadrCFM || null
     },
     communityActionsSelected: Array.isArray(appState.communityActions) ? appState.communityActions : []
   };
@@ -87,7 +100,7 @@ export function exportPlanAsJSON(appState = {}) {
 }
 
 /**
- * Safely parses and imports an AeroShield plan from JSON string
+ * Safely parses and imports a VayuGuardian plan from JSON string
  * Defends against prototype pollution and malformed payloads
  * @param {string} jsonString
  * @returns {{ success: boolean, profile?: object, error?: string }}

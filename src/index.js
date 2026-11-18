@@ -1,7 +1,7 @@
 /**
- * @fileoverview Central Barrel Re-export for AeroShield AI Core
+ * @fileoverview Central Barrel Re-export for VayuGuardian AI Engine Modules
  * @module index
- * @author Vishwajeet Kumar
+ * @author Vishwajeet Kumar (VishwajeetCSE)
  * @license MIT
  */
 

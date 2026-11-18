@@ -1,9 +1,9 @@
 /**
  * @fileoverview Main Application Controller & UI Orchestrator
- * High-performance, thin coordinator (< 400 lines) connecting domain engines,
- * accessibility utilities, and reactive DOM renderers.
+ * High-performance coordinator connecting domain calculation engines,
+ * accessibility utilities, and reactive DOM view renderers.
  * @module app
- * @author Vishwajeet Kumar
+ * @author Vishwajeet Kumar (VishwajeetCSE)
  * @license MIT
  */
 
@@ -26,14 +26,15 @@ import {
 } from './src/hacks-engine.js';
 
 import {
-  queryAeroGenieAI,
+  queryVayuGenieAI,
   generateHeuristicAdvisory
 } from './src/ai.js';
 
 import {
   ApiKeyVault,
   setSanitizedHTML,
-  escapeHTML
+  escapeHTML,
+  clamp
 } from './src/security.js';
 
 import {
@@ -55,22 +56,25 @@ import {
   renderRiskGauge,
   renderPollutantCards,
   renderRoutineTimeline,
-  renderIAQHacks,
+  renderCorsiRosenthalSpecs,
   renderEmissionImpact,
   renderCommunityShield
 } from './src/ui-renderers.js';
 
-import { $, $$, debounce } from './src/ui-events.js';
-import { HOTSPOT_CITIES } from './src/constants.js';
+import { $, $$, debounce, on } from './src/ui-events.js';
+import { HOTSPOT_CITIES, COMMUNITY_ACTIONS } from './src/constants.js';
 
 /**
  * Global reactive application state
  */
 const state = {
   profile: loadProfileFromStorage(),
-  crParams: {
+  communityActions: ['ban_dg_gensets', 'water_misting_canons', 'zero_waste_burning_patrol'],
+  diyParams: {
+    roomLengthFt: 15,
+    roomWidthFt: 12,
+    roomHeightFt: 10,
     fanCFM: 1800,
-    filterCount: 4,
     filterGrade: 'merv13'
   },
   aiLoading: false
@@ -81,24 +85,112 @@ const state = {
  */
 function initApp() {
   initSkipLink();
-  initRovingTabindex('.tabs-container', '.nav-tab');
+  initRovingTabindex('.nav-tabs-wrapper', '.nav-tab');
   initTheme();
   bindNavigationTabs();
   syncFormFromState();
   bindFormEvents();
   bindCalculatorEvents();
+  bindCommunityEvents();
   bindAIEvents();
+  bindExportAndPrint();
   bindModalEvents();
 
-  // Initial calculation and full render
+  // Initial calculation and full UI render
   recalculateAll();
 }
 
 /**
- * Theme Toggle (Light / Dark Mode)
+ * Recalculates all domain models and re-renders active views
+ */
+function recalculateAll() {
+  const p = state.profile;
+
+  // 1. Air Quality Multi-Pollutant & WHO Benchmark
+  const composite = calculateCompositeAQI({
+    pm25: p.currentAQI * 0.68,
+    pm10: p.currentAQI * 1.15,
+    no2: Math.min(180, p.currentAQI * 0.35)
+  });
+
+  // 2. Diurnal Smog Inversion Curve (24h)
+  const forecast = getDiurnalSmogForecast(p.currentAQI, p.cityKey, p.microZoneKey);
+
+  // 3. Inhaled PM2.5 Deposition & Cigarette Equivalence
+  const avoidance = calculateInhaledPM25Avoidance({
+    basePM25: p.currentAQI * 0.68,
+    indoorHours: 18,
+    filterReductionPct: 85
+  });
+
+  // 4. Household Biological Risk Score (0 - 100)
+  const riskData = calculateHouseholdRiskIndex(p, p.currentAQI);
+
+  // 5. Daily 6-Block Low-Emission Routine
+  const routineBlocks = generateDailyRoutine(p, forecast);
+
+  // 6. Commute Carbon & Fuel Savings
+  const carbonData = calculateEmissionReductions(p);
+
+  // 7. DIY Corsi-Rosenthal & Room ACH Physics
+  const crSpecs = calculateCorsiRosenthalSpecs({
+    roomLengthFt: state.diyParams.roomLengthFt,
+    roomWidthFt: state.diyParams.roomWidthFt,
+    roomHeightFt: state.diyParams.roomHeightFt,
+    fanCFM: state.diyParams.fanCFM,
+    filterGrade: state.diyParams.filterGrade
+  });
+
+  // 8. Indoor Hack Layered Suppression
+  const suppression = calculateIndoorSuppression(p.activeHacks, p.currentAQI * 0.68);
+
+  // Persist normalized state
+  saveProfileToStorage(p);
+
+  // Render to DOM
+  updateHeaderStats(p.currentAQI, composite.category, composite.color);
+  renderDiurnalChart(forecast, $('#diurnal-chart'));
+  renderRiskGauge(riskData, $('#risk-gauge-container'));
+  renderPollutantCards(composite, $('#pollutant-cards-container'));
+  renderRoutineTimeline(routineBlocks, $('#routine-timeline-container'));
+  renderCorsiRosenthalSpecs(crSpecs, $('#cr-specs-container'));
+  renderEmissionImpact(avoidance, carbonData, $('#impact-metrics-container'));
+  renderCommunityShield(COMMUNITY_ACTIONS, state.communityActions, $('#community-actions-container'));
+  updateSuppressionBar(suppression);
+}
+
+/**
+ * Updates primary header badges with current AQI
+ */
+function updateHeaderStats(aqi, category, color) {
+  const badge = $('#header-aqi-badge');
+  if (badge) {
+    badge.textContent = `AQI ${aqi} • ${category}`;
+    badge.style.backgroundColor = color;
+  }
+}
+
+/**
+ * Updates indoor suppression progress indicator
+ */
+function updateSuppressionBar(suppression) {
+  const bar = $('#indoor-suppression-progress');
+  const label = $('#indoor-suppression-label');
+  const safePill = $('#indoor-safe-pill');
+
+  if (bar) bar.style.width = `${suppression.effectiveReductionPct}%`;
+  if (label) label.textContent = `${suppression.effectiveReductionPct}% Indoor Smog Blocked (${suppression.indoorPM25} µg/m³ PM2.5)`;
+  if (safePill) {
+    safePill.textContent = suppression.isSafeLevel ? 'Safe Breathing Zone' : 'Additional Filtration Needed';
+    safePill.className = `badge ${suppression.isSafeLevel ? 'badge-success' : 'badge-warning'}`;
+  }
+}
+
+/**
+ * Theme Toggle Controller (Dark & Light Mode)
  */
 function initTheme() {
-  const savedTheme = localStorage.getItem('aeroshield_theme') || 'dark';
+  const savedTheme = localStorage.getItem('vayuguardian_theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
 
@@ -106,11 +198,12 @@ function initTheme() {
     const current = document.documentElement.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('aeroshield_theme', next);
+    localStorage.setItem('vayuguardian_theme', next);
     updateThemeIcon(next);
     announce(`Switched to ${next} theme`);
-    // Re-render canvas for theme contrast
-    const forecast = getDiurnalSmogForecast(state.profile.currentAQI, state.profile.cityKey);
+
+    // Redraw canvas with updated theme contrast
+    const forecast = getDiurnalSmogForecast(state.profile.currentAQI, state.profile.cityKey, state.profile.microZoneKey);
     renderDiurnalChart(forecast, $('#diurnal-chart'));
   });
 }
@@ -145,10 +238,10 @@ function bindNavigationTabs() {
         announce(`Navigated to ${tab.textContent.trim()}`);
       }
 
-      // If opening forecast tab, refresh canvas sizing
-      if (targetId === 'section-forecast') {
+      // If switching to forecast tab, re-render chart to ensure correct geometry
+      if (targetId === 'tab-forecast') {
         setTimeout(() => {
-          const forecast = getDiurnalSmogForecast(state.profile.currentAQI, state.profile.cityKey);
+          const forecast = getDiurnalSmogForecast(state.profile.currentAQI, state.profile.cityKey, state.profile.microZoneKey);
           renderDiurnalChart(forecast, $('#diurnal-chart'));
         }, 50);
       }
@@ -162,6 +255,7 @@ function bindNavigationTabs() {
 function syncFormFromState() {
   const p = state.profile;
   $('#select-city').value = p.cityKey;
+  $('#select-microzone').value = p.microZoneKey;
   $('#input-aqi').value = p.currentAQI;
   $('#val-aqi-display').textContent = p.currentAQI;
   $('#select-commute').value = p.commuteMode;
@@ -177,13 +271,17 @@ function syncFormFromState() {
   $$('input[name="vulnerability"]').forEach((cb) => {
     cb.checked = p.vulnerabilities.includes(cb.value);
   });
+
+  $$('input[name="iaq-hack"]').forEach((cb) => {
+    cb.checked = p.activeHacks.includes(cb.value);
+  });
 }
 
 /**
  * Bind Input Changes on Profiler Form
  */
 function bindFormEvents() {
-  // Archetype radio selection cards
+  // Archetype radio card selection
   $$('.archetype-card').forEach((card) => {
     card.addEventListener('click', () => {
       const archKey = card.getAttribute('data-archetype');
@@ -199,425 +297,251 @@ function bindFormEvents() {
     });
   });
 
-  // City change
+  // City Selector
   $('#select-city').addEventListener('change', (e) => {
     const cityKey = e.target.value;
     state.profile.cityKey = cityKey;
-    const defaultAQI = HOTSPOT_CITIES[cityKey].baseAQI;
+    const defaultAQI = HOTSPOT_CITIES[cityKey] ? HOTSPOT_CITIES[cityKey].baseAQI : 260;
     state.profile.currentAQI = defaultAQI;
     $('#input-aqi').value = defaultAQI;
     $('#val-aqi-display').textContent = defaultAQI;
+    announce(`City changed to ${e.target.options[e.target.selectedIndex].text}`);
     recalculateAll();
   });
 
-  // AQI slider (debounced)
-  $('#input-aqi').addEventListener('input', (e) => {
-    const val = Number(e.target.value);
-    $('#val-aqi-display').textContent = val;
-    state.profile.currentAQI = val;
+  // Micro-Zone Selector
+  $('#select-microzone').addEventListener('change', (e) => {
+    state.profile.microZoneKey = e.target.value;
+    announce('Micro-zone updated');
+    recalculateAll();
   });
-  $('#input-aqi').addEventListener('change', () => recalculateAll());
 
-  // Commute mode & distance
+  // Debounced AQI Slider
+  const debouncedAQIUpdate = debounce((val) => {
+    state.profile.currentAQI = parseInt(val, 10);
+    announce(`AQI updated to ${val}`);
+    recalculateAll();
+  }, 100);
+
+  $('#input-aqi').addEventListener('input', (e) => {
+    $('#val-aqi-display').textContent = e.target.value;
+    debouncedAQIUpdate(e.target.value);
+  });
+
+  // Commute Mode & Distance
   $('#select-commute').addEventListener('change', (e) => {
     state.profile.commuteMode = e.target.value;
+    announce('Commute mode updated');
     recalculateAll();
   });
 
   $('#input-commute-distance').addEventListener('input', (e) => {
-    const dist = Number(e.target.value);
-    $('#val-distance-display').textContent = dist;
-    state.profile.commuteDistanceKm = dist;
+    const val = parseInt(e.target.value, 10);
+    state.profile.commuteDistanceKm = val;
+    $('#val-distance-display').textContent = val;
+    recalculateAll();
   });
-  $('#input-commute-distance').addEventListener('change', () => recalculateAll());
 
-  // Vulnerability checkboxes
+  // Vulnerability Checkboxes
   $$('input[name="vulnerability"]').forEach((cb) => {
     cb.addEventListener('change', () => {
-      const checked = $$('input[name="vulnerability"]:checked').map((c) => c.value);
-      state.profile.vulnerabilities = checked;
+      const selected = $$('input[name="vulnerability"]:checked').map((c) => c.value);
+      state.profile.vulnerabilities = selected;
+      announce('Vulnerability factors updated');
       recalculateAll();
     });
   });
 
-  // Room area slider
-  $('#input-room-sqft').addEventListener('input', (e) => {
-    const area = Number(e.target.value);
-    $('#val-room-display').textContent = area;
-    $('#plant-room-area-text').textContent = area;
+  // IAQ Hack Checkboxes
+  $$('input[name="iaq-hack"]').forEach((cb) => {
+    cb.addEventListener('change', () => {
+      const selected = $$('input[name="iaq-hack"]:checked').map((c) => c.value);
+      state.profile.activeHacks = selected;
+      announce('Indoor air defense measures updated');
+      recalculateAll();
+    });
   });
-  $('#input-room-sqft').addEventListener('change', () => recalculateAll());
 }
 
 /**
- * Bind Corsi-Rosenthal Calculator and Hack Checkboxes
+ * Bind Interactive DIY Corsi-Rosenthal Box Room Sliders
  */
 function bindCalculatorEvents() {
-  $('#cr-fan-cfm').addEventListener('input', (e) => {
-    const val = Number(e.target.value);
-    $('#val-cr-fan').textContent = val;
-    state.crParams.fanCFM = val;
-    updateCRCalculator();
+  const updateRoomDimensions = debounce(() => {
+    state.diyParams.roomLengthFt = parseInt($('#input-room-l').value, 10) || 15;
+    state.diyParams.roomWidthFt = parseInt($('#input-room-w').value, 10) || 12;
+    state.diyParams.roomHeightFt = parseInt($('#input-room-h').value, 10) || 10;
+    state.diyParams.filterGrade = $('#select-filter-grade').value;
+    recalculateAll();
+  }, 150);
+
+  ['#input-room-l', '#input-room-w', '#input-room-h'].forEach((sel) => {
+    const el = $(sel);
+    if (el) el.addEventListener('input', updateRoomDimensions);
   });
 
-  $('#cr-filter-count').addEventListener('change', (e) => {
-    state.crParams.filterCount = Number(e.target.value);
-    updateCRCalculator();
-  });
+  $('#select-filter-grade').addEventListener('change', updateRoomDimensions);
+}
 
-  $('#cr-filter-grade').addEventListener('change', (e) => {
-    state.crParams.filterGrade = e.target.value;
-    updateCRCalculator();
-  });
-
-  // IAQ Hack Checkboxes Delegation
-  $('#hacks-container').addEventListener('change', (e) => {
-    if (e.target.classList.contains('hack-checkbox')) {
-      const hackId = e.target.getAttribute('data-hack-id');
-      const isChecked = e.target.checked;
-      const set = new Set(state.profile.activeHacks);
-      if (isChecked) set.add(hackId);
-      else set.delete(hackId);
-      state.profile.activeHacks = Array.from(set);
-      recalculateAll();
+/**
+ * Bind Community Smog Shield Action Checklist Events
+ */
+function bindCommunityEvents() {
+  on($('#community-actions-container'), 'change', '.community-toggle', (e, target) => {
+    const actionId = target.getAttribute('data-action-id');
+    if (target.checked) {
+      if (!state.communityActions.includes(actionId)) {
+        state.communityActions.push(actionId);
+      }
+    } else {
+      state.communityActions = state.communityActions.filter((id) => id !== actionId);
     }
+    announce('Community mitigation plan updated');
+    recalculateAll();
   });
 }
 
 /**
- * Updates the Corsi-Rosenthal Stats Card
- */
-function updateCRCalculator() {
-  const roomArea = Number($('#input-room-sqft').value) || 300;
-  const specs = calculateCorsiRosenthalSpecs({
-    fanCFM: state.crParams.fanCFM,
-    filterCount: state.crParams.filterCount,
-    filterType: state.crParams.filterGrade,
-    roomAreaSqFt: roomArea
-  });
-
-  setSanitizedHTML($('#res-cr-cadr'), `${specs.cadrCFM} <small>CFM</small>`);
-  setSanitizedHTML($('#res-cr-ach'), `${specs.ach} <small>ACH</small>`);
-  setSanitizedHTML($('#res-cr-t90'), `${specs.time90Mins} <small>min</small>`);
-  $('#res-cr-cost').textContent = `₹${specs.diyCostINR.toLocaleString()}`;
-
-  const badge = $('#cr-status-badge');
-  badge.textContent = specs.isAdequateForSmog ? '✔ Medical Smog Standard (ACH ≥ 4.0)' : '⚠️ Moderate Flow';
-  badge.style.background = specs.isAdequateForSmog ? 'rgba(0, 200, 83, 0.2)' : 'rgba(255, 171, 0, 0.2)';
-}
-
-/**
- * Re-runs Domain Math and Refreshes All Presentation Views
- */
-function recalculateAll() {
-  const p = state.profile;
-  const roomArea = Number($('#input-room-sqft').value) || 300;
-
-  // 1. Composite AQI & Diurnal Forecast
-  const compAQI = calculateCompositeAQI({ pm25: Math.round(p.currentAQI * 0.72) });
-  renderPollutantCards(compAQI, $('#aqi-cards-container'));
-
-  const forecast = getDiurnalSmogForecast(p.currentAQI, p.cityKey);
-  renderDiurnalChart(forecast, $('#diurnal-chart'));
-  $('#safe-window-text').textContent = forecast.safeWindow.description;
-
-  // 2. Daily Routine Timeline
-  const routine = generateDailyRoutine({
-    archetypeKey: p.archetypeKey,
-    cityKey: p.cityKey,
-    baseAQI: p.currentAQI,
-    commuteMode: p.commuteMode,
-    vulnerabilities: p.vulnerabilities
-  });
-  renderRoutineTimeline(routine.scheduleBlocks, $('#routine-timeline-container'));
-
-  const pillsHtml = routine.advisoryPills
-    .map((pill) => `<span class="routine-pill">💡 ${escapeHTML(pill)}</span>`)
-    .join('');
-  setSanitizedHTML($('#routine-pills'), pillsHtml);
-
-  // 3. IAQ Hacks & Corsi-Rosenthal
-  renderIAQHacks(p.activeHacks, $('#hacks-container'));
-  updateCRCalculator();
-
-  const plantsData = calculateBotanicalNeeds(roomArea);
-  const plantItemsHtml = plantsData.roster
-    .map(
-      (pl) => `
-    <div class="plant-item">
-      <strong>${escapeHTML(pl.name)} (${pl.count} pots)</strong>: ${escapeHTML(pl.role)}
-      <br/><small style="color: var(--text-muted);">${escapeHTML(pl.care)}</small>
-    </div>`
-    )
-    .join('');
-  setSanitizedHTML($('#botanical-container'), plantItemsHtml);
-
-  // 4. Inhaled Avoidance & Carbon Abatement
-  const inhaledAvoidance = calculateInhaledPM25Avoidance({
-    basePM25: Math.round(p.currentAQI * 0.72),
-    filterReductionPct: p.activeHacks.includes('corsi_rosenthal') ? 78 : 45
-  });
-
-  const carbonData = calculateEmissionReductions({
-    commuteCurrent: 'car',
-    commuteTarget: p.commuteMode,
-    distanceKm: p.commuteDistanceKm,
-    workDays: p.workDaysPerMonth
-  });
-
-  const healthRisk = calculateHouseholdRiskIndex({
-    outdoorAQI: p.currentAQI,
-    archetypeKey: p.archetypeKey,
-    vulnerabilityKeys: p.vulnerabilities,
-    activeHackIds: p.activeHacks
-  });
-
-  // Render Risk Gauge and Emission Impact Counters
-  renderRiskGauge(healthRisk.safetyScore, healthRisk.riskLevel, $('#risk-gauge-container'));
-  renderEmissionImpact({ inhaledAvoided: inhaledAvoidance, carbonData, healthRisk }, $('#impact-stats-container'));
-
-  // Render Comparison Table
-  renderComparisonTable(p, inhaledAvoidance, healthRisk, carbonData);
-
-  // 5. Community Shield & Notice Circular
-  renderCommunityShield($('#community-protocols-container'));
-  const noticeHtml = generateHeuristicAdvisory({
-    archetypeKey: p.archetypeKey,
-    cityKey: p.cityKey,
-    aqi: p.currentAQI,
-    mode: 'community'
-  });
-  setSanitizedHTML($('#community-notice-preview'), noticeHtml);
-
-  // Persist safe profile
-  saveProfileToStorage(p);
-}
-
-/**
- * Renders domain comparison table (Unmitigated vs AeroShield)
- */
-function renderComparisonTable(p, inhaled, risk, carbon) {
-  const tableBody = $('#table-comparison-body');
-  if (!tableBody) return;
-
-  const html = `
-    <tr>
-      <td><strong>Indoor PM2.5 Infiltration</strong></td>
-      <td>~${Math.round(p.currentAQI * 0.72 * 0.65)} µg/m³ (Unfiltered)</td>
-      <td><strong>~${Math.round(p.currentAQI * 0.72 * 0.15)} µg/m³</strong> (CR Box + Sealing)</td>
-      <td><span style="color: var(--success); font-weight: bold;">-77% Particulates</span></td>
-    </tr>
-    <tr>
-      <td><strong>Daily Inhaled PM2.5 Deposition</strong></td>
-      <td>~${(inhaled.dailyInhaledAvoidedUg * 1.8).toFixed(0)} µg/day</td>
-      <td><strong>~${(inhaled.dailyInhaledAvoidedUg * 0.35).toFixed(0)} µg/day</strong></td>
-      <td><span style="color: var(--success); font-weight: bold;">${inhaled.dailyInhaledAvoidedUg.toLocaleString()} µg Saved</span></td>
-    </tr>
-    <tr>
-      <td><strong>Cigarette Health Equivalence</strong></td>
-      <td>~${(inhaled.cigarettesAvoidedDaily * 1.5).toFixed(1)} cig/day toxic load</td>
-      <td><strong>~0.3 cig/day</strong></td>
-      <td><span style="color: var(--success); font-weight: bold;">~${inhaled.cigarettesAvoidedMonthly} cig/month avoided</span></td>
-    </tr>
-    <tr>
-      <td><strong>Household Smog Protection Score</strong></td>
-      <td>20–30% (Severe Vulnerability)</td>
-      <td><strong>${risk.safetyScore}%</strong> (${risk.riskLevel})</td>
-      <td><span style="color: var(--success); font-weight: bold;">+${risk.safetyScore - 25}% Safety Gain</span></td>
-    </tr>
-    <tr>
-      <td><strong>Monthly Carbon Emissions</strong></td>
-      <td>${(carbon.monthlyCo2eSavedKg * 1.6).toFixed(1)} kg CO₂e (Solo ICE Car)</td>
-      <td><strong>${(carbon.monthlyCo2eSavedKg * 0.2).toFixed(1)} kg CO₂e</strong> (Metro/EV Transit)</td>
-      <td><span style="color: var(--success); font-weight: bold;">${carbon.monthlyCo2eSavedKg} kg CO₂e Abated</span></td>
-    </tr>
-  `;
-  setSanitizedHTML(tableBody, html);
-}
-
-/**
- * AeroGenie AI Coach Interactions
+ * Bind GenAI Chat & Prompt Chips
  */
 function bindAIEvents() {
-  // Quick Prompt Chips
-  $$('.ai-chip').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const prompt = chip.getAttribute('data-prompt');
-      $('#ai-user-query').value = prompt;
-      triggerAIQuery(prompt);
-    });
-  });
+  const sendBtn = $('#btn-ai-send');
+  const inputEl = $('#ai-prompt-input');
+  const responseBox = $('#ai-response-container');
 
-  // Submit Query Form
-  $('#form-ai-query').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const query = $('#ai-user-query').value;
-    triggerAIQuery(query);
-  });
-}
+  async function handleSend(promptText) {
+    const query = (promptText || inputEl.value).trim();
+    if (!query) return;
 
-async function triggerAIQuery(promptText) {
-  const container = $('#ai-response-container');
-  const submitBtn = $('#btn-ai-submit');
+    inputEl.value = '';
+    setSanitizedHTML(
+      responseBox,
+      '<div class="ai-loading-pulse">🍃 Consulting VayuGenie AI knowledge graph...</div>'
+    );
+    announce('Analyzing air defense query');
 
-  submitBtn.disabled = true;
-  setSanitizedHTML(submitBtn, '<span>Consulting...</span>');
-  setSanitizedHTML(container, '<div class="ai-placeholder-text">Analyzing smog curves, micro-climate factors, and generating guidance...</div>');
+    try {
+      const result = await queryVayuGenieAI(query, {
+        profile: state.profile,
+        currentAQI: state.profile.currentAQI
+      });
 
-  try {
-    const responseHtml = await queryAeroGenieAI(promptText, {
-      archetypeKey: state.profile.archetypeKey,
-      cityKey: state.profile.cityKey,
-      aqi: state.profile.currentAQI,
-      vulnerabilities: state.profile.vulnerabilities,
-      mode: 'family'
-    });
+      const formattedHtml = result.displayText
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>')
+        .replace(/### (.*?)(<br>|$)/g, '<h3>$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/- (.*?)(<br>|$)/g, '<li>$1</li>');
 
-    setSanitizedHTML(container, responseHtml);
-    announce('AeroGenie advisory ready');
-  } catch (err) {
-    setSanitizedHTML(container, `<p style="color: var(--danger);">Error generating advice: ${escapeHTML(err.message)}</p>`);
-  } finally {
-    submitBtn.disabled = false;
-    setSanitizedHTML(submitBtn, '<span>Ask AeroGenie</span>');
+      setSanitizedHTML(responseBox, `<div class="ai-bubble">${formattedHtml}</div>`);
+      announce('VayuGenie advisory ready');
+    } catch (err) {
+      setSanitizedHTML(
+        responseBox,
+        `<div class="ai-bubble error">Error: ${escapeHTML(err.message)}</div>`
+      );
+    }
   }
+
+  sendBtn.addEventListener('click', () => handleSend());
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleSend();
+  });
+
+  // Prompt Preset Chips
+  $$('.prompt-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const q = chip.getAttribute('data-prompt');
+      handleSend(q);
+    });
+  });
 }
 
 /**
- * Modal Dialogs & Toolbar Actions
+ * Bind 1-Click Clean Air Plan Export & Print
+ */
+function bindExportAndPrint() {
+  $('#btn-export-plan').addEventListener('click', () => {
+    const jsonStr = exportPlanAsJSON(state);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `VayuGuardian-CleanAirPlan-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    announce('Clean Air Plan downloaded as JSON');
+  });
+
+  $('#btn-print-briefing').addEventListener('click', () => {
+    announce('Opening print dialogue for community briefing');
+    window.print();
+  });
+}
+
+/**
+ * Bind API Key Modal Dialog (Memory-Only Storage)
  */
 function bindModalEvents() {
-  // existing modal bindings (if any)
-}
+  const modal = $('#modal-apikey');
+  const openBtn = $('#btn-open-apikey');
+  const closeBtns = $$('[data-action="close-modal"]');
+  const saveBtn = $('#btn-save-key');
+  const clearBtn = $('#btn-clear-key');
+  const keyInput = $('#input-gemini-key');
+  const statusSpan = $('#apikey-status-text');
 
-/**
- * Bind Export Briefing button
- */
-function bindExportButton() {
-  const exportBtn = document.getElementById('exportBtn');
-  if (!exportBtn) return;
-  exportBtn.addEventListener('click', () => {
-    try {
-      const json = exportPlanAsJSON(state);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'aeroshield_plan.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      announce('Exported plan as JSON');
-    } catch (e) {
-      console.error('Export failed', e);
-      announce('Export failed');
-    }
-  });
-}
+  let cleanupFocus = null;
 
-// Hook the new binding into initApp
-function initApp() {
-  initSkipLink();
-  initRovingTabindex('.tabs-container', '.nav-tab');
-  initTheme();
-  bindNavigationTabs();
-  syncFormFromState();
-  bindFormEvents();
-  bindCalculatorEvents();
-  bindAIEvents();
-  bindModalEvents();
-  bindExportButton(); // <-- added
-  // Initial calculation and full render
-  recalculateAll();
-}
-  const apiModal = $('#modal-api-vault');
-  const planModal = $('#modal-plan-export');
-
-  // Open API Key Dialog
-  $('#btn-api-modal').addEventListener('click', () => {
-    apiModal.showModal();
-    trapFocus(apiModal);
-    $('#input-gemini-key').value = ApiKeyVault.getKey() || '';
-  });
-
-  // Save API Key
-  $('#form-api-key').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const key = $('#input-gemini-key').value;
-    ApiKeyVault.setKey(key);
-    updateAPIKeyDisplay();
-    apiModal.close();
-    announce('Gemini API key saved in memory');
-  });
-
-  // Clear Key
-  $('#btn-clear-key').addEventListener('click', () => {
-    ApiKeyVault.clear();
-    $('#input-gemini-key').value = '';
-    updateAPIKeyDisplay();
-    announce('API key cleared from memory');
-  });
-
-  // Open Plan Export Dialog
-  $('#btn-export-plan').addEventListener('click', () => {
-    planModal.showModal();
-    trapFocus(planModal);
-    const jsonStr = exportPlanAsJSON(state);
-    $('#textarea-plan-json').value = jsonStr;
-  });
-
-  // Copy Plan JSON
-  $('#btn-do-copy-json').addEventListener('click', () => {
-    const txt = $('#textarea-plan-json').value;
-    navigator.clipboard.writeText(txt).then(() => announce('Plan JSON copied to clipboard'));
-  });
-
-  // Import Plan JSON
-  $('#btn-do-import-json').addEventListener('click', () => {
-    const raw = $('#textarea-plan-json').value;
-    const res = importPlanFromJSON(raw);
-    if (res.success) {
-      state.profile = res.profile;
-      syncFormFromState();
-      recalculateAll();
-      planModal.close();
-      announce('Plan imported successfully');
+  function updateKeyStatusUI() {
+    if (ApiKeyVault.hasKey()) {
+      statusSpan.textContent = 'Active (Stored in RAM only)';
+      statusSpan.className = 'badge badge-success';
     } else {
-      alert(`Import error: ${res.error}`);
+      statusSpan.textContent = 'Offline Heuristics Active (No API Key)';
+      statusSpan.className = 'badge badge-subtle';
+    }
+  }
+
+  updateKeyStatusUI();
+
+  openBtn.addEventListener('click', () => {
+    modal.hidden = false;
+    cleanupFocus = trapFocus(modal);
+    announce('Opened API Key configuration');
+  });
+
+  closeBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      modal.hidden = true;
+      if (cleanupFocus) cleanupFocus();
+      announce('Closed API Key configuration');
+    });
+  });
+
+  saveBtn.addEventListener('click', () => {
+    const key = keyInput.value.trim();
+    if (key) {
+      ApiKeyVault.setKey(key);
+      keyInput.value = '';
+      updateKeyStatusUI();
+      modal.hidden = true;
+      if (cleanupFocus) cleanupFocus();
+      announce('Google Gemini API key safely stored in memory');
     }
   });
 
-  // Close modals
-  $$('.btn-close-modal').forEach((btn) => {
-    btn.addEventListener('click', (e) => e.target.closest('dialog').close());
+  clearBtn.addEventListener('click', () => {
+    ApiKeyVault.clearKey();
+    keyInput.value = '';
+    updateKeyStatusUI();
+    announce('API key wiped from memory');
   });
-
-  // Print Clean Air Briefing
-  $('#btn-print-brief').addEventListener('click', () => window.print());
-
-  // Copy Community Notice
-  $('#btn-copy-notice').addEventListener('click', () => {
-    const text = $('#community-notice-preview').innerText;
-    navigator.clipboard.writeText(text).then(() => announce('Community circular copied to clipboard'));
-  });
-
-  $('#btn-print-notice').addEventListener('click', () => window.print());
 }
 
-function updateAPIKeyDisplay() {
-  const statusLabel = $('#api-status-label');
-  const vaultStatus = $('#vault-key-status');
-  if (ApiKeyVault.hasKey()) {
-    if (statusLabel) statusLabel.textContent = 'Gemini Live Active';
-    if (vaultStatus) vaultStatus.textContent = `Live: ${ApiKeyVault.getMasked()}`;
-  } else {
-    if (statusLabel) statusLabel.textContent = 'Offline AI Active';
-    if (vaultStatus) vaultStatus.textContent = 'Offline Heuristic Engine Active';
-  }
-}
-
-// Bootstrap application on DOM ready
+// Kickstart application on DOMContentLoaded
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {

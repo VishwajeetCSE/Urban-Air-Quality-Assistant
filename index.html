@@ -3,387 +3,408 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>AeroShield AI — Urban Air Quality & Winter Smog Assistant</title>
-  <meta name="description" content="Production-grade, zero-dependency GenAI assistant for families and communities to navigate severe winter smog and urban air pollution." />
+  <meta name="description" content="VayuGuardian AI — Hyperlocal Urban Clean Air Defense & Vulnerable Care Microclimate System for severe winter smog and urban pollution." />
+  <meta name="theme-color" content="#064e3b" />
+  <title>VayuGuardian AI — Hyperlocal Urban Clean Air Defense System</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- WCAG 2.1 AA Accessible Skip Link -->
+  <!-- WCAG 2.1 AA: Skip to main content keyboard accessibility -->
   <a href="#main-content" class="skip-to-content">Skip to main content</a>
 
-  <!-- ARIA Live Screen Reader Announcer -->
-  <div id="aero-sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <!-- ARIA Screen Reader Live Region -->
+  <div id="vayu-sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Header & Primary Toolbar -->
-  <header class="app-header" role="banner">
-    <div class="header-container">
-      <div class="brand-group">
-        <div class="logo-shield" aria-hidden="true">🍃</div>
-        <div>
-          <h1 class="brand-title">AeroShield AI</h1>
-          <p class="brand-subtitle">Urban Air Quality & Winter Smog Copilot</p>
+  <!-- Primary Application Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-cluster">
+        <div class="brand-shield" aria-hidden="true">🍃</div>
+        <div class="brand-text">
+          <h1 class="brand-name">VayuGuardian AI</h1>
+          <p class="brand-tagline">Hyperlocal Clean Air Defense & Vulnerable Care Microclimate System</p>
         </div>
       </div>
 
-      <div class="toolbar-actions" role="toolbar" aria-label="Application controls">
-        <button id="btn-theme-toggle" class="btn btn-icon" aria-label="Toggle light or dark theme" title="Toggle theme">
-          <span id="theme-icon" aria-hidden="true">☀️</span>
+      <div class="header-actions">
+        <div id="header-aqi-badge" class="badge badge-aqi" aria-label="Current Air Quality Level">
+          AQI 280 • Poor
+        </div>
+        <button id="btn-theme-toggle" class="btn btn-icon" title="Toggle Light/Dark Theme" aria-label="Toggle Light/Dark Theme">
+          <span id="theme-icon" aria-hidden="true">🌙</span>
         </button>
-
-        <button id="btn-api-modal" class="btn btn-secondary" aria-haspopup="dialog" aria-controls="modal-api-vault">
-          <span aria-hidden="true">🔑</span>
-          <span id="api-status-label">Offline AI Active</span>
+        <button id="btn-open-apikey" class="btn btn-secondary btn-sm" aria-haspopup="dialog" aria-controls="modal-apikey">
+          🔑 AI Key
         </button>
-
-        <button id="btn-export-plan" class="btn btn-secondary" aria-label="Export or import clean JSON plan">
-          <span aria-hidden="true">💾</span> Plan JSON
+        <button id="btn-export-plan" class="btn btn-primary btn-sm">
+          💾 Export Plan
         </button>
-
-        <button id="btn-print-brief" class="btn btn-primary" aria-label="Print clean air briefing">
-          <span aria-hidden="true">🖨️</span> Print Briefing
+        <button id="btn-print-briefing" class="btn btn-outline btn-sm">
+          🖨️ Print Briefing
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main Navigation Tabs (WAI-ARIA Roving Tabindex) -->
-  <nav class="nav-tabs-wrapper" role="navigation" aria-label="Feature modules">
-    <div class="tabs-container" role="tablist" aria-label="AeroShield Modules">
-      <button class="nav-tab active" role="tab" id="tab-profiler" aria-selected="true" aria-controls="section-profiler">
-        📍 Profiler
+  <!-- Sticky WAI-ARIA Navigation Tablist -->
+  <nav class="nav-tabs-bar" aria-label="Primary Navigation">
+    <div class="nav-tabs-wrapper" role="tablist">
+      <button class="nav-tab active" role="tab" id="tab-btn-profiler" aria-selected="true" aria-controls="tab-profiler" tabindex="0">
+        👤 Profiler & Zone
       </button>
-      <button class="nav-tab" role="tab" id="tab-forecast" aria-selected="false" aria-controls="section-forecast">
-        📈 Diurnal Curve
+      <button class="nav-tab" role="tab" id="tab-btn-forecast" aria-selected="false" aria-controls="tab-forecast" tabindex="-1">
+        📈 Smog Forecast (24h)
       </button>
-      <button class="nav-tab" role="tab" id="tab-routine" aria-selected="false" aria-controls="section-routine">
-        🗓️ Daily Routine
+      <button class="nav-tab" role="tab" id="tab-btn-schedule" aria-selected="false" aria-controls="tab-schedule" tabindex="-1">
+        🕒 Daily Routine
       </button>
-      <button class="nav-tab" role="tab" id="tab-hacks" aria-selected="false" aria-controls="section-hacks">
-        🌀 IAQ Hacks Studio
+      <button class="nav-tab" role="tab" id="tab-btn-iaq" aria-selected="false" aria-controls="tab-iaq" tabindex="-1">
+        🏠 Indoor IAQ & DIY Purifier
       </button>
-      <button class="nav-tab" role="tab" id="tab-impact" aria-selected="false" aria-controls="section-impact">
-        🌳 Direct Impact
+      <button class="nav-tab" role="tab" id="tab-btn-community" aria-selected="false" aria-controls="tab-community" tabindex="-1">
+        🏢 Community Shield
       </button>
-      <button class="nav-tab" role="tab" id="tab-community" aria-selected="false" aria-controls="section-community">
-        🏘️ Community Shield
-      </button>
-      <button class="nav-tab" role="tab" id="tab-ai" aria-selected="false" aria-controls="section-ai">
-        🤖 AeroGenie AI
+      <button class="nav-tab" role="tab" id="tab-btn-genie" aria-selected="false" aria-controls="tab-genie" tabindex="-1">
+        ✨ VayuGenie AI Coach
       </button>
     </div>
   </nav>
 
-  <!-- Main Application Content -->
-  <main id="main-content" class="app-main" role="main" tabindex="-1">
+  <!-- Main Content Panes -->
+  <main id="main-content" class="app-main-content">
 
-    <!-- 1. Household & Community Profiler -->
-    <section id="section-profiler" class="tab-panel active" role="tabpanel" aria-labelledby="tab-profiler">
+    <!-- TAB 1: PROFILER & ZONE -->
+    <section id="tab-profiler" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-profiler">
       <div class="panel-header">
-        <h2>Household & Community Location Profiler</h2>
-        <p>Configure family archetypes, vulnerability factors, and micro-climate parameters to personalize smog mitigation.</p>
+        <h2>Demographic Profiler & Urban Micro-Zone</h2>
+        <p class="panel-subtitle">Calibrate vulnerability multipliers, household composition, and localized dispersion factors.</p>
       </div>
 
-      <div class="archetypes-selection-grid" role="radiogroup" aria-label="Select Household Archetype">
-        <div class="archetype-card active" data-archetype="apartment_family" role="radio" aria-checked="true" tabindex="0">
-          <div class="archetype-icon" aria-hidden="true">🏢</div>
-          <div class="archetype-info">
-            <h3>Urban Apartment Family</h3>
-            <span class="archetype-badge">Kids + Elderly</span>
-            <p>Elevated apartment with shared balcony drafts. High priority on bedroom purification and safe child playground windows.</p>
+      <div class="dashboard-grid">
+        <div class="card card-archetypes">
+          <h3 class="card-heading">1. Select Household / Facility Archetype</h3>
+          <div class="archetype-grid" role="radiogroup" aria-label="Demographic Archetypes">
+            <div class="archetype-card active" data-archetype="residential_family" role="radio" aria-checked="true" tabindex="0">
+              <div class="archetype-icon">👨‍👩‍👧‍👦</div>
+              <div class="archetype-meta">
+                <h3>Urban Family</h3>
+                <p>Apartment household with infants, school-goers, and senior parents.</p>
+              </div>
+            </div>
+            <div class="archetype-card" data-archetype="vulnerable_care" role="radio" aria-checked="false" tabindex="0">
+              <div class="archetype-icon">🏫</div>
+              <div class="archetype-meta">
+                <h3>School / Care Facility</h3>
+                <p>Daycare, school, or senior citizen care home managing high occupancy exposure.</p>
+              </div>
+            </div>
+            <div class="archetype-card" data-archetype="urban_commuter" role="radio" aria-checked="false" tabindex="0">
+              <div class="archetype-icon">💼</div>
+              <div class="archetype-meta">
+                <h3>Daily Commuter</h3>
+                <p>Professional spending 2+ hours daily in transit corridors & vehicle canyons.</p>
+              </div>
+            </div>
+            <div class="archetype-card" data-archetype="community_rwa" role="radio" aria-checked="false" tabindex="0">
+              <div class="archetype-icon">🏢</div>
+              <div class="archetype-meta">
+                <h3>Housing Society RWA</h3>
+                <p>Residential community administrator coordinating shared emission curbs.</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="archetype-card" data-archetype="daily_commuter" role="radio" aria-checked="false" tabindex="-1">
-          <div class="archetype-icon" aria-hidden="true">🚲</div>
-          <div class="archetype-info">
-            <h3>Daily Commuter & Pro</h3>
-            <span class="archetype-badge">Active Transit</span>
-            <p>Spends 2-4 hours outdoors in congested traffic corridors. Priority on N95 respirators and metro carpool shifts.</p>
-          </div>
-        </div>
-
-        <div class="archetype-card" data-archetype="society_resident" role="radio" aria-checked="false" tabindex="-1">
-          <div class="archetype-icon" aria-hidden="true">🏘️</div>
-          <div class="archetype-info">
-            <h3>Housing Society Resident</h3>
-            <span class="archetype-badge">RWA Community</span>
-            <p>Focuses on collective impact: zero-idle school bays, diesel generator limits, anti-smog misting, and composting.</p>
-          </div>
-        </div>
-      </div>
-
-      <form id="form-profiler" class="profiler-form-grid" novalidate>
-        <div class="form-group">
-          <label for="select-city">City / Smog Hotspot</label>
-          <select id="select-city" class="form-control">
-            <option value="delhi">Delhi-NCR (Severe Smog Basin)</option>
-            <option value="bhopal">Bhopal (Plateau Inversion Valley)</option>
-            <option value="patna">Patna (Gangetic Basin Trap)</option>
-            <option value="lucknow">Lucknow (Urban Haze Core)</option>
-            <option value="kolkata">Kolkata (High Humidity Soot)</option>
-            <option value="jaipur">Jaipur (Semi-Arid Dust Drop)</option>
-            <option value="mumbai">Mumbai (Coastal Transition)</option>
-            <option value="bengaluru">Bengaluru (Plateau Micro-Trap)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="input-aqi">Current Outdoor AQI: <strong id="val-aqi-display">385</strong></label>
-          <input type="range" id="input-aqi" class="form-range" min="20" max="500" value="385" step="5" />
-        </div>
-
-        <div class="form-group">
-          <label for="select-commute">Daily Commute Mode</label>
-          <select id="select-commute" class="form-control">
-            <option value="car">Solo Petrol / Diesel Car</option>
-            <option value="two_wheeler">Petrol Motorcycle / Scooter</option>
-            <option value="carpool">Shared Carpool</option>
-            <option value="metro" selected>Metro / Rapid Rail</option>
-            <option value="bus">Electric / CNG Bus</option>
-            <option value="cycle_walk">Walking / Cycling</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="input-commute-distance">One-Way Commute: <strong id="val-distance-display">15</strong> km</label>
-          <input type="range" id="input-commute-distance" class="form-range" min="1" max="60" value="15" />
-        </div>
-
-        <div class="form-group full-width">
-          <label class="group-label">Household Vulnerabilities (Check all that apply)</label>
-          <div class="checkbox-row">
-            <label class="checkbox-label">
-              <input type="checkbox" name="vulnerability" value="asthma" checked />
-              <span>🫁 Asthma / COPD / Respiratory</span>
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="vulnerability" value="infants" checked />
-              <span>👶 Infants / Toddlers (< 5 yrs)</span>
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="vulnerability" value="seniors" />
-              <span>🧓 Senior Citizens (65+ yrs)</span>
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" name="vulnerability" value="pregnant" />
-              <span>🤰 Expectant Mothers</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="form-group full-width">
-          <label for="input-room-sqft">Living / Sleeping Chamber Floor Area: <strong id="val-room-display">300</strong> sq.ft</label>
-          <input type="range" id="input-room-sqft" class="form-range" min="80" max="1000" value="300" step="10" />
-        </div>
-      </form>
-    </section>
-
-    <!-- 2. Diurnal Smog Inversion Curve & Real-Time AQI Breakdown -->
-    <section id="section-forecast" class="tab-panel" role="tabpanel" aria-labelledby="tab-forecast" hidden>
-      <div class="panel-header">
-        <h2>Diurnal Smog Inversion Curve & CPCB Severity</h2>
-        <p>Atmospheric boundary layer modeling reveals when pollution sinks to ground level versus when solar convection opens safe windows.</p>
-      </div>
-
-      <div class="forecast-layout-grid">
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>24-Hour Winter Smog Diurnal Profile</h3>
-            <span class="legend-badge-safe">🟢 Convective Safe Window (12–3:30 PM)</span>
-            <span class="legend-badge-danger">🔴 Morning Smog Trap (6–9 AM)</span>
-          </div>
-          <div class="canvas-responsive-box">
-            <canvas id="diurnal-chart" role="img" aria-label="Hourly diurnal smog inversion curve graph"></canvas>
-          </div>
-          <p id="safe-window-text" class="safe-window-banner"></p>
-        </div>
-
-        <div id="aqi-cards-container" class="aqi-metrics-sidebar"></div>
-      </div>
-    </section>
-
-    <!-- 3. Low-Emission Daily Routine Builder -->
-    <section id="section-routine" class="tab-panel" role="tabpanel" aria-labelledby="tab-routine" hidden>
-      <div class="panel-header">
-        <h2>Low-Emission Daily Routine & Schedule Switcher</h2>
-        <p>Reschedule daily life away from toxic morning and evening temperature inversion traps into high planetary boundary windows.</p>
-      </div>
-
-      <div class="routine-actions-bar">
-        <div id="routine-pills" class="routine-pills-wrap"></div>
-      </div>
-
-      <div id="routine-timeline-container"></div>
-    </section>
-
-    <!-- 4. DIY IAQ Hacks Studio -->
-    <section id="section-hacks" class="tab-panel" role="tabpanel" aria-labelledby="tab-hacks" hidden>
-      <div class="panel-header">
-        <h2>Indoor Air Quality (IAQ) Hack Studio & DIY Filtration</h2>
-        <p>Scientific, budget-friendly interventions that drop indoor particulate matter by up to 80% without expensive proprietary filters.</p>
-      </div>
-
-      <div class="cr-calculator-card">
-        <div class="cr-header">
-          <div>
-            <h3>🌀 Corsi-Rosenthal Box Performance Calculator</h3>
-            <p>Calculate Clean Air Delivery Rate (CADR), Air Changes per Hour (ACH), and particulate clearance curves.</p>
-          </div>
-          <div id="cr-status-badge" class="badge-cadr">Calculating...</div>
-        </div>
-
-        <div class="cr-controls-grid">
-          <div class="form-group">
-            <label for="cr-fan-cfm">Fan Free-Air Rating: <strong id="val-cr-fan">1800</strong> CFM</label>
-            <input type="range" id="cr-fan-cfm" class="form-range" min="800" max="2500" value="1800" step="100" />
-          </div>
-
-          <div class="form-group">
-            <label for="cr-filter-count">Number of Filters in Cube</label>
-            <select id="cr-filter-count" class="form-control">
-              <option value="1">1 Filter (Flat Face Shroud)</option>
-              <option value="2">2 Filters (V-Shape Wedge)</option>
-              <option value="4" selected>4 Filters (Standard Square Cube)</option>
-              <option value="5">5 Filters (Cube + Bottom Filter)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="cr-filter-grade">Filter Media Efficiency</label>
-            <select id="cr-filter-grade" class="form-control">
-              <option value="merv13" selected>MERV-13 (85% PM2.5 Efficiency — Recommended)</option>
-              <option value="hepa">True HEPA (99.97% Particulate Efficiency)</option>
-              <option value="merv11">MERV-11 (65% Standard Coarse Efficiency)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="cr-results-grid">
-          <div class="cr-stat">
-            <span class="cr-stat-val" id="res-cr-cadr">550 <small>CFM</small></span>
-            <span class="cr-stat-lbl">Effective CADR</span>
-          </div>
-          <div class="cr-stat">
-            <span class="cr-stat-val" id="res-cr-ach">11.0 <small>ACH</small></span>
-            <span class="cr-stat-lbl">Air Changes / Hour</span>
-          </div>
-          <div class="cr-stat">
-            <span class="cr-stat-val" id="res-cr-t90">13 <small>min</small></span>
-            <span class="cr-stat-lbl">90% Air Clearance</span>
-          </div>
-          <div class="cr-stat">
-            <span class="cr-stat-val" id="res-cr-cost">₹4,400</span>
-            <span class="cr-stat-lbl">DIY Build Cost (vs ₹28k)</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="hacks-and-botanicals-grid">
-        <div>
-          <h3 class="section-subtitle">Active Indoor Defense Hacks</h3>
-          <p class="subtitle-desc">Check the hacks you have active in your home to update your real-time Health Risk Index:</p>
-          <div id="hacks-container"></div>
-        </div>
-
-        <div>
-          <h3 class="section-subtitle">NASA Botanical Bio-Filter Roster</h3>
-          <p class="subtitle-desc">Calculated specifically for your <span id="plant-room-area-text">300</span> sq.ft living chamber:</p>
-          <div id="botanical-container" class="botanical-card"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. Direct Impact & Carbon Swaps -->
-    <section id="section-impact" class="tab-panel" role="tabpanel" aria-labelledby="tab-impact" hidden>
-      <div class="panel-header">
-        <h2>Direct Impact Visualizer & Personal Health Metrics</h2>
-        <p>Quantifiable cause-and-effect science: microgram lung exposure avoided, cigarette equivalence, and carbon emission abatement.</p>
-      </div>
-
-      <div class="impact-overview-grid">
-        <div class="impact-gauge-card">
-          <h3>Household Smog Protection Score</h3>
+        <div class="card card-risk">
+          <h3 class="card-heading">Biological Vulnerability Index</h3>
           <div id="risk-gauge-container"></div>
-          <p class="gauge-caption">Dynamic 0–100% safety scale weighted by outdoor AQI, structural infiltration, persona susceptibility, and active DIY hacks.</p>
         </div>
-
-        <div id="impact-stats-container" class="impact-stats-wrapper"></div>
       </div>
 
-      <div class="comparison-table-card">
-        <h3>Unmitigated Baseline vs Mitigated AeroShield Household</h3>
-        <div class="table-responsive">
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th scope="col">Domain Metric</th>
-                <th scope="col">Unmitigated Baseline</th>
-                <th scope="col">AeroShield Protocol</th>
-                <th scope="col">Net Advantage</th>
-              </tr>
-            </thead>
-            <tbody id="table-comparison-body"></tbody>
-          </table>
+      <div class="form-grid-three">
+        <div class="card">
+          <h3 class="card-heading">2. Location & Micro-Zone</h3>
+          <div class="form-group">
+            <label for="select-city">Metro Region / Urban Hotspot</label>
+            <select id="select-city" class="form-select">
+              <option value="delhi">Delhi NCR (Severe Inversion)</option>
+              <option value="mumbai">Mumbai Coast (Moderate)</option>
+              <option value="kolkata">Kolkata Metro (High)</option>
+              <option value="patna">Patna Gangetic Plains (Severe)</option>
+              <option value="lucknow">Lucknow Belt (Severe)</option>
+              <option value="bhopal">Bhopal Central (Moderate)</option>
+              <option value="bengaluru">Bengaluru Plateau (Low)</option>
+              <option value="hyderabad">Hyderabad Ring (Moderate)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="select-microzone">Hyperlocal Urban Micro-Zone</label>
+            <select id="select-microzone" class="form-select">
+              <option value="dense_residential">High-Density Residential Cluster (Biomass & DG smoke)</option>
+              <option value="traffic_canyon">Arterial Corridor / Urban Canyon (Trapped NOx & Soot)</option>
+              <option value="industrial_fringe">Industrial Fringe & Freight Corridor (High SO2 & Dust)</option>
+              <option value="peri_urban">Peri-Urban Belt (Surface radiation ground inversion)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="slider-header">
+              <label for="input-aqi">Ambient Outdoor AQI</label>
+              <span id="val-aqi-display" class="slider-val">280</span>
+            </div>
+            <input type="range" id="input-aqi" min="30" max="500" value="280" class="form-slider" />
+            <div class="slider-scale">
+              <span>50 (Good)</span>
+              <span>200 (Moderate)</span>
+              <span>300 (Poor)</span>
+              <span>400+ (Severe)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-heading">3. Commute & Transit Mode</h3>
+          <div class="form-group">
+            <label for="select-commute">Primary Transit Mode</label>
+            <select id="select-commute" class="form-select">
+              <option value="metro">Metro Rail / Electric Suburban</option>
+              <option value="electric_bus">Electric Transit Bus / AC Bus</option>
+              <option value="ev_twowheeler">Electric 2-Wheeler (EV)</option>
+              <option value="shared_auto">CNG Shared Auto / Rickshaw</option>
+              <option value="petrol_car" selected>Solo Petrol Compact Car</option>
+              <option value="diesel_suv">Solo Diesel SUV</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="slider-header">
+              <label for="input-commute-distance">One-Way Commute Distance (km)</label>
+              <span id="val-distance-display" class="slider-val">15</span>
+            </div>
+            <input type="range" id="input-commute-distance" min="2" max="60" value="15" class="form-slider" />
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-heading">4. Vulnerability Risk Factors</h3>
+          <div class="checkbox-group">
+            <label class="check-item">
+              <input type="checkbox" name="vulnerability" value="asthma" checked />
+              <span>Asthma / Respiratory Condition</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="vulnerability" value="infants" checked />
+              <span>Infants & Toddlers (&lt; 5 yrs)</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="vulnerability" value="seniors" />
+              <span>Senior Citizens (65+ yrs)</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="vulnerability" value="cardiac" />
+              <span>Cardiovascular / Hypertension History</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="vulnerability" value="pregnant" />
+              <span>Expectant Mothers</span>
+            </label>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 6. Community Smog Shield & Citizen Action -->
-    <section id="section-community" class="tab-panel" role="tabpanel" aria-labelledby="tab-community" hidden>
+    <!-- TAB 2: SMOG FORECAST & POLLUTANTS -->
+    <section id="tab-forecast" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-forecast" hidden>
       <div class="panel-header">
-        <h2>Community Smog Shield & Citizen Action Plan</h2>
-        <p>Mitigation protocols for residential societies (RWAs), apartment associations, and neighborhood vigilance groups.</p>
+        <h2>Diurnal Smog Inversion & Multi-Pollutant Engine</h2>
+        <p class="panel-subtitle">Planetary Boundary Layer (PBL) simulation modeling ground-level smoke trapping vs midday solar convection.</p>
       </div>
 
-      <div id="community-protocols-container"></div>
+      <div class="card card-chart">
+        <div class="chart-header">
+          <h3 class="card-heading">24-Hour Diurnal Exposure Curve & Safe Activity Windows</h3>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-color trap"></span> Morning Inversion Trap (06:00 - 09:30 AM)</span>
+            <span class="legend-item"><span class="legend-color safe"></span> Convective Safe Window (12:00 - 03:30 PM)</span>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="diurnal-chart" width="800" height="320" aria-label="24-hour Diurnal Smog Inversion Curve"></canvas>
+        </div>
+      </div>
 
-      <div class="community-export-box">
-        <div class="export-box-header">
-          <h3>📢 1-Click RWA Society Notice & WhatsApp Broadcast</h3>
-          <p>Generate clean, WhatsApp-ready or printable notices with community resolutions.</p>
+      <div class="panel-section-title">
+        <h3>CPCB Multi-Pollutant Sub-Indices & WHO 2021 Benchmark Exceedance</h3>
+      </div>
+      <div id="pollutant-cards-container"></div>
+    </section>
+
+    <!-- TAB 3: DAILY ROUTINE -->
+    <section id="tab-schedule" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-schedule" hidden>
+      <div class="panel-header">
+        <h2>Low-Emission Daily Routine Builder</h2>
+        <p class="panel-subtitle">Dynamic 6-block schedule synchronized with planetary boundary layer convection to minimize alveolar particulate deposition.</p>
+      </div>
+
+      <div class="routine-layout">
+        <div class="card">
+          <h3 class="card-heading">6-Block Exposure Mitigation Timeline</h3>
+          <div id="routine-timeline-container"></div>
         </div>
-        <div class="export-box-actions">
-          <button id="btn-copy-notice" class="btn btn-secondary">📋 Copy WhatsApp Circular</button>
-          <button id="btn-print-notice" class="btn btn-primary">🖨️ Print Notice Board Poster</button>
+
+        <div class="card">
+          <h3 class="card-heading">Direct Impact Explainer: Averted Health & Carbon Burden</h3>
+          <p class="text-muted">Quantified biological and emissions dividend achieved by adopting scheduled switches.</p>
+          <div id="impact-metrics-container"></div>
         </div>
-        <div id="community-notice-preview" class="notice-preview-container"></div>
       </div>
     </section>
 
-    <!-- 7. Hybrid GenAI Smog Coach ("AeroGenie") -->
-    <section id="section-ai" class="tab-panel" role="tabpanel" aria-labelledby="tab-ai" hidden>
+    <!-- TAB 4: INDOOR IAQ & DIY PURIFIER -->
+    <section id="tab-iaq" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-iaq" hidden>
       <div class="panel-header">
-        <h2>AeroGenie — Hybrid GenAI Smog Coach</h2>
-        <p>Contextual, scientifically grounded winter smog guidance. Runs 100% offline via our deterministic knowledge graph, or connects to Google Gemini Flash with your ephemeral key.</p>
+        <h2>Indoor Air Quality (IAQ) & DIY Bio-Shield</h2>
+        <p class="panel-subtitle">Engineering high Clean Air Delivery Rates (CADR) with budget-friendly multi-stage filtration.</p>
       </div>
 
-      <div class="ai-chips-toolbar" role="group" aria-label="Quick Question Prompts">
-        <button class="ai-chip" data-prompt="Generate complete family daily action guide">🛡️ Daily Family Plan</button>
-        <button class="ai-chip" data-prompt="How to build a Corsi-Rosenthal DIY purifier">🌀 Build CR Box</button>
-        <button class="ai-chip" data-prompt="Safety protocol for school children and infants">👶 Child & Infant Care</button>
-        <button class="ai-chip" data-prompt="Asthma patient protocol for winter morning walks">🫁 Asthma & Elderly Care</button>
-        <button class="ai-chip" data-prompt="Generate society RWA circular on leaf burning and diesel gensets">📢 RWA Clean Air Circular</button>
+      <div class="suppression-banner card">
+        <div class="suppression-header">
+          <div>
+            <h3 class="card-heading">Active Indoor Smog Barrier</h3>
+            <span id="indoor-suppression-label" class="text-bold">85% Indoor Smog Blocked (38 µg/m³ PM2.5)</span>
+          </div>
+          <span id="indoor-safe-pill" class="badge badge-success">Safe Breathing Zone</span>
+        </div>
+        <div class="progress-track" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">
+          <div id="indoor-suppression-progress" class="progress-fill" style="width: 85%;"></div>
+        </div>
       </div>
 
-      <div class="ai-chat-card">
-        <form id="form-ai-query" class="ai-input-form">
-          <label for="ai-user-query" class="sr-only">Ask AeroGenie a question</label>
-          <input
-            type="text"
-            id="ai-user-query"
-            class="form-control ai-text-input"
-            placeholder="Ask about school commute safety, room sealing, plant care, transit choices..."
-            autocomplete="off"
-          />
-          <button type="submit" id="btn-ai-submit" class="btn btn-primary ai-submit-btn">
-            <span>Ask AeroGenie</span>
-          </button>
-        </form>
+      <div class="dashboard-grid">
+        <div class="card">
+          <h3 class="card-heading">DIY Corsi-Rosenthal Hybrid Box Purifier Specs</h3>
+          <p class="text-muted">Calculate CADR, Air Changes per Hour (ACH), and particle clearance times for custom room dimensions.</p>
 
-        <div id="ai-response-container" class="ai-response-box" aria-live="polite">
-          <div class="ai-placeholder-text">
-            Ask any question above or click a prompt chip to generate instant, localized clean air strategies.
+          <div class="dimensions-form">
+            <div class="form-group-inline">
+              <div>
+                <label for="input-room-l">Length (ft)</label>
+                <input type="number" id="input-room-l" value="15" min="6" max="60" class="form-input" />
+              </div>
+              <div>
+                <label for="input-room-w">Width (ft)</label>
+                <input type="number" id="input-room-w" value="12" min="6" max="60" class="form-input" />
+              </div>
+              <div>
+                <label for="input-room-h">Height (ft)</label>
+                <input type="number" id="input-room-h" value="10" min="7" max="20" class="form-input" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="select-filter-grade">Filter Media Configuration</label>
+              <select id="select-filter-grade" class="form-select">
+                <option value="merv13" selected>4x MERV-13 Pleated Panels + Carbon Mesh (Recommended)</option>
+                <option value="hepa">True HEPA (H13) Media</option>
+                <option value="merv11">4x MERV-11 Economy Panels</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="cr-specs-container"></div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-heading">Active Layered Defense Measures</h3>
+          <div class="checkbox-group">
+            <label class="check-item">
+              <input type="checkbox" name="iaq-hack" value="corsi_rosenthal" checked />
+              <div>
+                <strong>DIY Corsi-Rosenthal Box Fan Purifier</strong>
+                <p class="check-desc">+65% PM2.5 reduction; 500+ CFM CADR at 80% lower cost than retail HEPA.</p>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="iaq-hack" value="window_sealing" checked />
+              <div>
+                <strong>Silicone Weatherstripping & Gap Sealing</strong>
+                <p class="check-desc">+12% reduction; stops cold nocturnal infiltration through window frames.</p>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="iaq-hack" value="wet_mopping" checked />
+              <div>
+                <strong>Microfibre Wet-Mopping Protocol</strong>
+                <p class="check-desc">+8% reduction; captures settled fine dust without toxic dry resuspension.</p>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="iaq-hack" value="incense_ban" checked />
+              <div>
+                <strong>Zero Incense & Mosquito Coil Combustion</strong>
+                <p class="check-desc">+8% reduction; burning 1 incense stick emits PM2.5 equivalent to 4 cigarettes.</p>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="iaq-hack" value="kitchen_exhaust" />
+              <div>
+                <strong>Range Hood with Backdraft Damper</strong>
+                <p class="check-desc">+5% reduction; evacuates cooking oil ultrafine particles directly outdoors.</p>
+              </div>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" name="iaq-hack" value="phytoremediation" />
+              <div>
+                <strong>NASA Botanical Bio-Shield Matrix</strong>
+                <p class="check-desc">+4% reduction; Snake Plants & Areca Palms remove VOCs and balance moisture.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: COMMUNITY SMOG SHIELD -->
+    <section id="tab-community" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-community" hidden>
+      <div class="panel-header">
+        <h2>Housing Society & Community Smog Shield</h2>
+        <p class="panel-subtitle">Collective mitigation protocols for Resident Welfare Associations (RWAs), apartment complexes, and neighborhood clusters.</p>
+      </div>
+
+      <div class="card">
+        <h3 class="card-heading">Collective Emission Abatement Checklist</h3>
+        <p class="text-muted">Activate society-level interventions to compute collective PM2.5 and CO2e abatement.</p>
+        <div id="community-actions-container"></div>
+      </div>
+    </section>
+
+    <!-- TAB 6: VAYUGENIE AI COACH -->
+    <section id="tab-genie" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-genie" hidden>
+      <div class="panel-header">
+        <h2>VayuGenie AI — Smog Defense Coach</h2>
+        <p class="panel-subtitle">Hybrid intelligence combining a 100% offline atmospheric physics knowledge graph with optional live Google Gemini AI.</p>
+      </div>
+
+      <div class="ai-chat-card card">
+        <div class="ai-input-area">
+          <div class="prompt-chips-wrapper">
+            <span class="chips-label">Quick Prompts:</span>
+            <button class="prompt-chip" data-prompt="Should children go to school playground or outdoor recess today?">Children & Recess</button>
+            <button class="prompt-chip" data-prompt="How to build and position a DIY Corsi-Rosenthal box for bedroom sleep?">Corsi-Rosenthal Setup</button>
+            <button class="prompt-chip" data-prompt="What is the safest outdoor window for exercise and morning walk?">Exercise Window</button>
+            <button class="prompt-chip" data-prompt="Which respirator mask is best and how to verify the facial seal?">N95 Mask Protocol</button>
+          </div>
+
+          <div class="input-send-cluster">
+            <input type="text" id="ai-prompt-input" class="form-input" placeholder="Ask VayuGenie: e.g. How to manage asthma attacks during severe smog?" aria-label="Ask VayuGenie AI" />
+            <button id="btn-ai-send" class="btn btn-primary">Consult AI</button>
+          </div>
+        </div>
+
+        <div id="ai-response-container" class="ai-output-box" aria-live="polite">
+          <div class="ai-placeholder">
+            🍃 Type a question above or click a quick prompt chip. Works completely offline by default, or with your memory-only Google Gemini API key.
           </div>
         </div>
       </div>
@@ -391,80 +412,43 @@
 
   </main>
 
-  <!-- Modal: Ephemeral API Key Vault -->
-  <dialog id="modal-api-vault" class="aero-modal" aria-labelledby="modal-api-title">
-    <div class="modal-dialog-content">
+  <!-- Ephemeral Google Gemini API Key Modal Dialog -->
+  <div id="modal-apikey" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-key-title" hidden>
+    <div class="modal-dialog">
       <div class="modal-header">
-        <h3 id="modal-api-title">🔑 Google Gemini API Key Vault</h3>
-        <button type="button" class="btn-close-modal" aria-label="Close dialog">✕</button>
+        <h3 id="modal-key-title">🔑 Google Gemini API Key Configuration</h3>
+        <button class="btn-close" data-action="close-modal" aria-label="Close dialog">✖</button>
       </div>
       <div class="modal-body">
-        <div class="security-banner">
-          <span class="banner-icon" aria-hidden="true">🛡️</span>
-          <div>
-            <strong>Ephemeral Memory-Only Guarantee:</strong>
-            <p>Your API key is stored exclusively in page RAM closure. It is NEVER written to localStorage, cookies, network logs, or plan exports. When you refresh or close this tab, it is wiped instantly.</p>
-          </div>
-        </div>
+        <p class="security-note">
+          🛡️ <strong>Air-Tight Privacy:</strong> Your Gemini API key is held <em>exclusively in page memory (RAM)</em>.
+          It is NEVER written to localStorage, cookies, server backends, or exported plan files.
+        </p>
 
-        <form id="form-api-key" class="modal-form">
-          <label for="input-gemini-key">Google Gemini 1.5/2.0 Flash API Key</label>
-          <input
-            type="password"
-            id="input-gemini-key"
-            class="form-control"
-            placeholder="AIzaSy..."
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <div class="key-status-display">
-            Current Status: <strong id="vault-key-status">Offline Heuristic Engine Active</strong>
-          </div>
-          <div class="modal-actions">
-            <button type="submit" class="btn btn-primary">Save Key to Memory</button>
-            <button type="button" id="btn-clear-key" class="btn btn-secondary">Clear / Revert to Offline</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- Modal: Clean Plan JSON Export / Import -->
-  <dialog id="modal-plan-export" class="aero-modal" aria-labelledby="modal-plan-title">
-    <div class="modal-dialog-content">
-      <div class="modal-header">
-        <h3 id="modal-plan-title">💾 AeroShield Clean Plan Backup</h3>
-        <button type="button" class="btn-close-modal" aria-label="Close dialog">✕</button>
-      </div>
-      <div class="modal-body">
-        <p>Export your tailored smog defense configuration or restore a saved plan. API keys are strictly stripped from all exports.</p>
         <div class="form-group">
-          <label for="textarea-plan-json">Plan JSON Data</label>
-          <textarea id="textarea-plan-json" class="form-control" rows="9" spellcheck="false"></textarea>
+          <label for="input-gemini-key">Enter Google Gemini API Key</label>
+          <input type="password" id="input-gemini-key" class="form-input" placeholder="AIzaSy..." autocomplete="off" />
         </div>
-        <div class="modal-actions">
-          <button type="button" id="btn-do-copy-json" class="btn btn-secondary">📋 Copy JSON</button>
-          <button type="button" id="btn-do-import-json" class="btn btn-primary">📥 Import Plan</button>
+
+        <div class="key-status-row">
+          <span>Current Status:</span>
+          <span id="apikey-status-text" class="badge badge-subtle">Offline Heuristics Active</span>
         </div>
       </div>
+      <div class="modal-footer">
+        <button id="btn-clear-key" class="btn btn-danger btn-sm">Clear Key from Memory</button>
+        <button class="btn btn-outline btn-sm" data-action="close-modal">Cancel</button>
+        <button id="btn-save-key" class="btn btn-primary btn-sm">Activate Live AI</button>
+      </div>
     </div>
-  </dialog>
+  </div>
 
-  <!-- Application Footer -->
-  <footer class="app-footer" role="contentinfo">
-    <div class="footer-container">
-      <p>
-        <strong>AeroShield AI</strong> — Urban Air Quality & Winter Smog Assistant |
-        Built for <em>Hack2Skill PromptWars (Bhopal Edition)</em> by Vishwajeet Kumar.
-      </p>
-      <p class="footer-meta">
-        Pure ES2022 Native Modules • Zero NPM Runtime Dependencies • Memory-Only Key Vault • WCAG 2.1 AA Compliant • <span id="repo-size-pill">Payload &lt; 150 KB</span>
-      </p>
-    </div>
+  <!-- Accessible Print Stylesheet Footer -->
+  <footer class="print-only-footer">
+    <hr />
+    <p>🍃 <strong>VayuGuardian AI — Urban Clean Air Plan</strong> • Generated automatically for community distribution.</p>
   </footer>
 
-  <!-- Main Controller Entry Point -->
   <script type="module" src="app.js"></script>
-  <button id="exportBtn" class="export-btn">Download Briefing</button>
 </body>
 </html>

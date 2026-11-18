@@ -1,7 +1,7 @@
 /**
- * @fileoverview DOM Element Caching, Debouncing, Event Delegation, and Leak-Free Listener Bindings
+ * @fileoverview DOM Element Caching, Debouncing, Event Delegation, and Listener Helpers
  * @module ui-events
- * @author Vishwajeet Kumar
+ * @author Vishwajeet Kumar (VishwajeetCSE)
  * @license MIT
  */
 
@@ -22,12 +22,12 @@ export const $ = (selector, scope = document) => scope.querySelector(selector);
 export const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
 /**
- * High-performance debounce utility to avoid layout thrashing
+ * High-performance debounce utility to avoid layout thrashing on fast inputs
  * @param {Function} fn
- * @param {number} [delay=250]
+ * @param {number} [delay=200]
  * @returns {Function}
  */
-export function debounce(fn, delay = 250) {
+export function debounce(fn, delay = 200) {
   let timer = null;
   return function (...args) {
     if (timer) clearTimeout(timer);
@@ -61,7 +61,7 @@ export function on(root, eventType, selector, handler) {
 const _elementCache = new Map();
 
 /**
- * Get or cache a DOM element by id/selector
+ * Get or cache a DOM element by selector
  * @param {string} selector
  * @returns {HTMLElement|null}
  */

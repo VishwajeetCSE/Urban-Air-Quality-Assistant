@@ -1,326 +1,320 @@
 /**
- * @fileoverview Domain Constants, AQI Breakpoints, Archetypes, and DIY IAQ Catalogs
+ * @fileoverview Domain Constants, Environmental Breakpoints, and Community Catalogs
  * @module constants
- * @author Vishwajeet Kumar
+ * @author Vishwajeet Kumar (VishwajeetCSE)
  * @license MIT
  */
 
 /**
- * CPCB Indian National Air Quality Index (NAQI) Breakpoints for Major Pollutants
- * Values in ug/m3 (24-hour average for PM2.5, PM10, NO2; 8-hour average for O3)
+ * CPCB (Central Pollution Control Board - India) National Air Quality Index (NAQI) Breakpoints
+ * Formula: I = [ (I_hi - I_lo) / (B_hi - B_lo) ] * (C - B_lo) + I_lo
  */
-export const AQI_BREAKPOINTS = {
+export const CPCB_BREAKPOINTS = {
   pm25: [
-    { minC: 0, maxC: 30, minI: 0, maxI: 50, label: 'Good', color: '#00e400', class: 'aqi-good' },
-    { minC: 30.1, maxC: 60, minI: 51, maxI: 100, label: 'Satisfactory', color: '#92d050', class: 'aqi-satisfactory' },
-    { minC: 60.1, maxC: 90, minI: 101, maxI: 200, label: 'Moderate', color: '#ffd700', class: 'aqi-moderate' },
-    { minC: 90.1, maxC: 120, minI: 201, maxI: 300, label: 'Poor', color: '#ff7e00', class: 'aqi-poor' },
-    { minC: 120.1, maxC: 250, minI: 301, maxI: 400, label: 'Very Poor', color: '#ff0000', class: 'aqi-very-poor' },
-    { minC: 250.1, maxC: 500, minI: 401, maxI: 500, label: 'Severe', color: '#7e0023', class: 'aqi-severe' }
+    { cLow: 0, cHigh: 30, iLow: 0, iHigh: 50, category: 'Good', color: '#10b981' },
+    { cLow: 31, cHigh: 60, iLow: 51, iHigh: 100, category: 'Satisfactory', color: '#84cc16' },
+    { cLow: 61, cHigh: 90, iLow: 101, iHigh: 200, category: 'Moderate', color: '#f59e0b' },
+    { cLow: 91, cHigh: 120, iLow: 201, iHigh: 300, category: 'Poor', color: '#f97316' },
+    { cLow: 121, cHigh: 250, iLow: 301, iHigh: 400, category: 'Very Poor', color: '#ef4444' },
+    { cLow: 251, cHigh: 500, iLow: 401, iHigh: 500, category: 'Severe', color: '#7f1d1d' }
   ],
   pm10: [
-    { minC: 0, maxC: 50, minI: 0, maxI: 50, label: 'Good', color: '#00e400' },
-    { minC: 50.1, maxC: 100, minI: 51, maxI: 100, label: 'Satisfactory', color: '#92d050' },
-    { minC: 100.1, maxC: 250, minI: 101, maxI: 200, label: 'Moderate', color: '#ffd700' },
-    { minC: 250.1, maxC: 350, minI: 201, maxI: 300, label: 'Poor', color: '#ff7e00' },
-    { minC: 350.1, maxC: 430, minI: 301, maxI: 400, label: 'Very Poor', color: '#ff0000' },
-    { minC: 430.1, maxC: 600, minI: 401, maxI: 500, label: 'Severe', color: '#7e0023' }
+    { cLow: 0, cHigh: 50, iLow: 0, iHigh: 50, category: 'Good', color: '#10b981' },
+    { cLow: 51, cHigh: 100, iLow: 51, iHigh: 100, category: 'Satisfactory', color: '#84cc16' },
+    { cLow: 101, cHigh: 250, iLow: 101, iHigh: 200, category: 'Moderate', color: '#f59e0b' },
+    { cLow: 251, cHigh: 350, iLow: 201, iHigh: 300, category: 'Poor', color: '#f97316' },
+    { cLow: 351, cHigh: 430, iLow: 301, iHigh: 400, category: 'Very Poor', color: '#ef4444' },
+    { cLow: 431, cHigh: 600, iLow: 401, iHigh: 500, category: 'Severe', color: '#7f1d1d' }
   ],
   no2: [
-    { minC: 0, maxC: 40, minI: 0, maxI: 50, label: 'Good', color: '#00e400' },
-    { minC: 40.1, maxC: 80, minI: 51, maxI: 100, label: 'Satisfactory', color: '#92d050' },
-    { minC: 80.1, maxC: 180, minI: 101, maxI: 200, label: 'Moderate', color: '#ffd700' },
-    { minC: 180.1, maxC: 280, minI: 201, maxI: 300, label: 'Poor', color: '#ff7e00' },
-    { minC: 280.1, maxC: 400, minI: 301, maxI: 400, label: 'Very Poor', color: '#ff0000' },
-    { minC: 400.1, maxC: 800, minI: 401, maxI: 500, label: 'Severe', color: '#7e0023' }
+    { cLow: 0, cHigh: 40, iLow: 0, iHigh: 50, category: 'Good', color: '#10b981' },
+    { cLow: 41, cHigh: 80, iLow: 51, iHigh: 100, category: 'Satisfactory', color: '#84cc16' },
+    { cLow: 81, cHigh: 180, iLow: 101, iHigh: 200, category: 'Moderate', color: '#f59e0b' },
+    { cLow: 181, cHigh: 280, iLow: 201, iHigh: 300, category: 'Poor', color: '#f97316' },
+    { cLow: 281, cHigh: 400, iLow: 301, iHigh: 400, category: 'Very Poor', color: '#ef4444' },
+    { cLow: 401, cHigh: 600, iLow: 401, iHigh: 500, category: 'Severe', color: '#7f1d1d' }
+  ],
+  so2: [
+    { cLow: 0, cHigh: 40, iLow: 0, iHigh: 50, category: 'Good', color: '#10b981' },
+    { cLow: 41, cHigh: 80, iLow: 51, iHigh: 100, category: 'Satisfactory', color: '#84cc16' },
+    { cLow: 81, cHigh: 380, iLow: 101, iHigh: 200, category: 'Moderate', color: '#f59e0b' },
+    { cLow: 381, cHigh: 800, iLow: 201, iHigh: 300, category: 'Poor', color: '#f97316' },
+    { cLow: 801, cHigh: 1600, iLow: 301, iHigh: 400, category: 'Very Poor', color: '#ef4444' },
+    { cLow: 1601, cHigh: 2400, iLow: 401, iHigh: 500, category: 'Severe', color: '#7f1d1d' }
+  ],
+  co: [
+    { cLow: 0, cHigh: 1.0, iLow: 0, iHigh: 50, category: 'Good', color: '#10b981' },
+    { cLow: 1.1, cHigh: 2.0, iLow: 51, iHigh: 100, category: 'Satisfactory', color: '#84cc16' },
+    { cLow: 2.1, cHigh: 10.0, iLow: 101, iHigh: 200, category: 'Moderate', color: '#f59e0b' },
+    { cLow: 10.1, cHigh: 17.0, iLow: 201, iHigh: 300, category: 'Poor', color: '#f97316' },
+    { cLow: 17.1, cHigh: 34.0, iLow: 301, iHigh: 400, category: 'Very Poor', color: '#ef4444' },
+    { cLow: 34.1, cHigh: 50.0, iLow: 401, iHigh: 500, category: 'Severe', color: '#7f1d1d' }
   ],
   o3: [
-    { minC: 0, maxC: 50, minI: 0, maxI: 50, label: 'Good', color: '#00e400' },
-    { minC: 50.1, maxC: 100, minI: 51, maxI: 100, label: 'Satisfactory', color: '#92d050' },
-    { minC: 100.1, maxC: 168, minI: 101, maxI: 200, label: 'Moderate', color: '#ffd700' },
-    { minC: 168.1, maxC: 208, minI: 201, maxI: 300, label: 'Poor', color: '#ff7e00' },
-    { minC: 208.1, maxC: 748, minI: 301, maxI: 400, label: 'Very Poor', color: '#ff0000' },
-    { minC: 748.1, maxC: 1000, minI: 401, maxI: 500, label: 'Severe', color: '#7e0023' }
+    { cLow: 0, cHigh: 50, iLow: 0, iHigh: 50, category: 'Good', color: '#10b981' },
+    { cLow: 51, cHigh: 100, iLow: 51, iHigh: 100, category: 'Satisfactory', color: '#84cc16' },
+    { cLow: 101, cHigh: 168, iLow: 101, iHigh: 200, category: 'Moderate', color: '#f59e0b' },
+    { cLow: 169, cHigh: 208, iLow: 201, iHigh: 300, category: 'Poor', color: '#f97316' },
+    { cLow: 209, cHigh: 748, iLow: 301, iHigh: 400, category: 'Very Poor', color: '#ef4444' },
+    { cLow: 749, cHigh: 1000, iLow: 401, iHigh: 500, category: 'Severe', color: '#7f1d1d' }
   ]
 };
 
 /**
- * 3 Primary Household & Community Archetypes
+ * WHO 2021 Global Air Quality Guidelines (24-hour mean benchmark limits)
+ */
+export const WHO_GUIDELINE_24HR = {
+  pm25: 15,  // µg/m³
+  pm10: 45,  // µg/m³
+  no2: 25,   // µg/m³
+  so2: 40,   // µg/m³
+  co: 4.0,   // mg/m³
+  o3: 100    // µg/m³ (8-hour)
+};
+
+/**
+ * Household & Community Demographic Archetypes
  */
 export const ARCHETYPES = {
-  apartment_family: {
-    id: 'apartment_family',
-    title: 'Urban Apartment Family',
-    subTitle: 'Kids + Elderly at Home',
+  residential_family: {
+    id: 'residential_family',
+    title: 'Urban Multi-Gen Household',
+    icon: '👨‍👩‍👧‍👦',
+    description: 'Apartment family with school-age kids and senior parents facing peak winter infiltration.',
+    defaultMinuteVentilation: 0.014, // m3/min average
+    baselineIndoorHours: 19,
+    priorityFocus: 'Room-by-room filtration scheduling and morning school commute smog protection.'
+  },
+  vulnerable_care: {
+    id: 'vulnerable_care',
+    title: 'Care Facility / School / Daycare',
+    icon: '🏫',
+    description: 'Educational institution, nursery, or eldercare center managing high occupancy risk.',
+    defaultMinuteVentilation: 0.013,
+    baselineIndoorHours: 21,
+    priorityFocus: 'Continuous high-ACH air cleaning, carbon VOC scrubbers, and zero-exertion smog recesses.'
+  },
+  urban_commuter: {
+    id: 'urban_commuter',
+    title: 'Daily City Commuter & Worker',
+    icon: '💼',
+    description: 'Working professional spending 2+ hours daily navigating congested urban transit canyons.',
+    defaultMinuteVentilation: 0.018,
+    baselineIndoorHours: 14,
+    priorityFocus: 'Commute corridor optimization, N95 seal compliance, and evening re-entry protocols.'
+  },
+  community_rwa: {
+    id: 'community_rwa',
+    title: 'Housing Society / RWA Admin',
     icon: '🏢',
-    description: 'High-density residential flat with shared ventilation, vulnerable dependents, and elevator shaft drafts.',
-    baseInfiltration: 0.45,
-    minuteVentilation: 0.012, // m3/min average
-    vulnerabilityWeight: 2.2,
-    defaultRoomSqFt: 350,
-    primaryFocal: 'Indoor HEPA/Corsi-Rosenthal filtration, safe playground hours, child school commute safety.'
-  },
-  daily_commuter: {
-    id: 'daily_commuter',
-    title: 'Daily Commuter & Professional',
-    subTitle: 'High Outdoor Transit Exposure',
-    icon: '🚲',
-    description: 'Spends 2-4 hours daily in active transit across congested road corridors with heavy diesel exhaust.',
-    baseInfiltration: 0.60,
-    minuteVentilation: 0.035, // m3/min during exertion/walking
-    vulnerabilityWeight: 1.8,
-    defaultRoomSqFt: 250,
-    primaryFocal: 'Transit route optimization, N95 respirators, in-cabin AC recirculation, carpool swaps.'
-  },
-  society_resident: {
-    id: 'society_resident',
-    title: 'Housing Society / Community Resident',
-    subTitle: 'Collective RWA Action & Neighborhood Impact',
-    icon: '🏘️',
-    description: 'Focuses on multi-family collective mitigation, shared diesel generator policies, anti-smog water misting, and leaf composting.',
-    baseInfiltration: 0.50,
-    minuteVentilation: 0.015,
-    vulnerabilityWeight: 1.6,
-    defaultRoomSqFt: 500,
-    primaryFocal: 'Zero-idle gates, DG genset curfew, leaf composting pits, community clean air advisory.'
+    description: 'Residential community leader managing generator bans, dust dampening, and clean shared spaces.',
+    defaultMinuteVentilation: 0.015,
+    baselineIndoorHours: 18,
+    priorityFocus: 'Collective diesel generator restrictions, mist cannon deployment, and shared lobby HEPA zones.'
   }
 };
 
 /**
- * Vulnerability Factors
+ * Hyperlocal Urban Micro-Zones (influencing localized dispersion and pollutant profiles)
  */
-export const VULNERABILITY_FACTORS = {
-  asthma: { id: 'asthma', label: 'Asthma / COPD / Respiratory', weight: 2.5, criticalThreshold: 30 },
-  infants: { id: 'infants', label: 'Infants & Toddlers (< 5 yrs)', weight: 2.3, criticalThreshold: 25 },
-  seniors: { id: 'seniors', label: 'Senior Citizens (65+ yrs)', weight: 2.0, criticalThreshold: 35 },
-  pregnant: { id: 'pregnant', label: 'Expectant Mothers', weight: 2.1, criticalThreshold: 30 }
+export const MICRO_ZONES = {
+  traffic_canyon: {
+    id: 'traffic_canyon',
+    name: 'Traffic Arterial / Urban Canyon',
+    description: 'Enclosed multi-lane corridors with trapped vehicle exhaust and slow cross-ventilation.',
+    pm25Multiplier: 1.25,
+    no2Multiplier: 1.45,
+    peakInversionHour: 8
+  },
+  dense_residential: {
+    id: 'dense_residential',
+    name: 'High-Density Residential Cluster',
+    description: 'Closely spaced multi-story blocks prone to kitchen exhaust and evening biomass smoke.',
+    pm25Multiplier: 1.15,
+    no2Multiplier: 1.10,
+    peakInversionHour: 7
+  },
+  industrial_fringe: {
+    id: 'industrial_fringe',
+    name: 'Industrial Border & Logistics Hub',
+    description: 'Zones near manufacturing or freight terminals with elevated SO2 and fugitive dust.',
+    pm25Multiplier: 1.35,
+    no2Multiplier: 1.20,
+    peakInversionHour: 6
+  },
+  peri_urban: {
+    id: 'peri_urban',
+    name: 'Peri-Urban & Educational Belt',
+    description: 'Open green spaces with lower vehicular density but higher winter surface thermal inversion.',
+    pm25Multiplier: 0.90,
+    no2Multiplier: 0.75,
+    peakInversionHour: 7
+  }
 };
 
 /**
- * Commute Modes and Carbon Emission Factors (kg CO2e per passenger km)
- */
-export const COMMUTE_MODES = {
-  metro: { id: 'metro', name: 'Metro / Rapid Rail', ef: 0.020, pmRisk: 'Low (Filtered Cabin)' },
-  bus: { id: 'bus', name: 'Electric / CNG Bus', ef: 0.035, pmRisk: 'Moderate' },
-  two_wheeler: { id: 'two_wheeler', name: 'Petrol Motorcycle / Scooter', ef: 0.062, pmRisk: 'Very High (Direct Inhalation)' },
-  car: { id: 'car', name: 'Solo Petrol / Diesel Car', ef: 0.175, pmRisk: 'Moderate (If Recirculate ON)' },
-  carpool: { id: 'carpool', name: 'Shared Carpool (3+ Persons)', ef: 0.058, pmRisk: 'Moderate' },
-  cycle_walk: { id: 'cycle_walk', name: 'Walking / Bicycling', ef: 0.000, pmRisk: 'High during smog; Great in safe window' }
-};
-
-/**
- * Benchmark Indian Urban Smog Hotspots
+ * Key Indian Urban Hotspot Cities
  */
 export const HOTSPOT_CITIES = {
-  delhi: {
-    id: 'delhi',
-    name: 'Delhi-NCR',
-    state: 'Delhi',
-    baseAQI: 385,
-    basePM25: 280,
-    inversionFactor: 1.85,
-    description: 'Gangetic cold pool trap with severe agricultural smoke and vehicular boundary inversion.'
+  delhi: { name: 'Delhi NCR', baseAQI: 360, inversionSeverity: 'Extreme', baselinePM25: 245 },
+  mumbai: { name: 'Mumbai Coast', baseAQI: 165, inversionSeverity: 'Moderate', baselinePM25: 75 },
+  kolkata: { name: 'Kolkata Metro', baseAQI: 235, inversionSeverity: 'High', baselinePM25: 140 },
+  patna: { name: 'Patna Plains', baseAQI: 330, inversionSeverity: 'Severe', baselinePM25: 220 },
+  lucknow: { name: 'Lucknow Belt', baseAQI: 290, inversionSeverity: 'Severe', baselinePM25: 185 },
+  bhopal: { name: 'Bhopal Central', baseAQI: 180, inversionSeverity: 'Moderate', baselinePM25: 95 },
+  bengaluru: { name: 'Bengaluru Plateau', baseAQI: 95, inversionSeverity: 'Low', baselinePM25: 38 },
+  hyderabad: { name: 'Hyderabad Ring', baseAQI: 145, inversionSeverity: 'Moderate', baselinePM25: 65 }
+};
+
+/**
+ * Vulnerability Modifiers for Physiological Risk Assessment
+ */
+export const VULNERABILITY_FACTORS = {
+  asthma: { label: 'Asthma / Chronic Respiratory Illness', weight: 1.40, riskNote: 'Airway hyper-responsiveness triggered at AQI > 100' },
+  infants: { label: 'Infants & Toddlers (< 5 years)', weight: 1.35, riskNote: 'Higher minute ventilation per kg body mass; immature alveolar defense' },
+  seniors: { label: 'Senior Citizens (65+ years)', weight: 1.30, riskNote: 'Elevated cardiac ischemia and stroke risk from ultrafine PM2.5 translocation' },
+  cardiac: { label: 'Hypertension or Cardiovascular Disease', weight: 1.30, riskNote: 'Autonomic nervous dysfunction during acute PM2.5 spikes' },
+  pregnant: { label: 'Expectant Mothers', weight: 1.25, riskNote: 'Transplacental particulate transfer risks fetal development' }
+};
+
+/**
+ * Commute Mobility Modes & Direct Environmental Emission Factors
+ * Emission factor: kg CO2e per passenger-kilometer (pkm)
+ */
+export const COMMUTE_MODES = {
+  metro: { label: 'Metro Rail / Suburban Train', co2ePerKm: 0.025, pm25ExposureFactor: 0.35, costPerKm: 1.8 },
+  electric_bus: { label: 'Electric / AC Transit Bus', co2ePerKm: 0.040, pm25ExposureFactor: 0.50, costPerKm: 2.2 },
+  ev_twowheeler: { label: 'Electric Scooter (EV)', co2ePerKm: 0.030, pm25ExposureFactor: 0.85, costPerKm: 0.8 },
+  shared_auto: { label: 'CNG Shared Auto / Rickshaw', co2ePerKm: 0.075, pm25ExposureFactor: 0.90, costPerKm: 3.5 },
+  petrol_car: { label: 'Solo Petrol Compact Car', co2ePerKm: 0.170, pm25ExposureFactor: 0.55, costPerKm: 8.5 },
+  diesel_suv: { label: 'Solo Diesel SUV', co2ePerKm: 0.240, pm25ExposureFactor: 0.60, costPerKm: 12.0 }
+};
+
+/**
+ * Engineered 3-Stage DIY Air Scrubber Specifications
+ */
+export const DIY_PURIFIER_CONFIGS = {
+  merv13_box: {
+    id: 'merv13_box',
+    name: '3-Stage Corsi-Rosenthal Hybrid Box',
+    description: '4x MERV-13 pleated panels + activated carbon mesh tray + 20-inch box fan.',
+    estimatedCostINR: 3800,
+    cadrCFM: 520,
+    pm25Efficiency: 0.88,
+    vocRemoval: 'High',
+    filterLifeMonths: 4
   },
-  bhopal: {
-    id: 'bhopal',
-    name: 'Bhopal',
-    state: 'Madhya Pradesh',
-    baseAQI: 315,
-    basePM25: 145,
-    inversionFactor: 1.40,
-    description: 'Central plateau valley trap with morning radiational fog and vehicular accumulation.'
+  comp_hepa: {
+    id: 'comp_hepa',
+    name: 'Commercial True HEPA Purifier (H13)',
+    description: 'Standard retail consumer purifier with proprietary replacement filters.',
+    estimatedCostINR: 19500,
+    cadrCFM: 260,
+    pm25Efficiency: 0.99,
+    vocRemoval: 'Moderate',
+    filterLifeMonths: 6
   },
-  patna: {
-    id: 'patna',
-    name: 'Patna',
-    state: 'Bihar',
-    baseAQI: 395,
-    basePM25: 245,
-    inversionFactor: 1.75,
-    description: 'Dense river basin thermal inversion with low wind dispersal speeds.'
-  },
-  lucknow: {
-    id: 'lucknow',
-    name: 'Lucknow',
-    state: 'Uttar Pradesh',
-    baseAQI: 365,
-    basePM25: 215,
-    inversionFactor: 1.65,
-    description: 'Dense urban core with morning ground-level haze and nocturnal radiation inversions.'
-  },
-  kolkata: {
-    id: 'kolkata',
-    name: 'Kolkata',
-    state: 'West Bengal',
-    baseAQI: 340,
-    basePM25: 180,
-    inversionFactor: 1.50,
-    description: 'Coastal-plain boundary layer compression with high humidity and soot.'
-  },
-  mumbai: {
-    id: 'mumbai',
-    name: 'Mumbai',
-    state: 'Maharashtra',
-    baseAQI: 265,
-    basePM25: 115,
-    inversionFactor: 1.25,
-    description: 'Coastal breeze transition zone with morning construction dust and diesel haze.'
-  },
-  jaipur: {
-    id: 'jaipur',
-    name: 'Jaipur',
-    state: 'Rajasthan',
-    baseAQI: 325,
-    basePM25: 160,
-    inversionFactor: 1.45,
-    description: 'Semi-arid basin with mineral dust resuspension and sharp winter temperature drops.'
-  },
-  bengaluru: {
-    id: 'bengaluru',
-    name: 'Bengaluru',
-    state: 'Karnataka',
-    baseAQI: 95,
-    basePM25: 58,
-    inversionFactor: 1.15,
-    description: 'High-altitude plateau with moderate micro-inversion in traffic corridors.'
+  dual_fan_cr: {
+    id: 'dual_fan_cr',
+    name: 'High-Volume Dual-Fan Community Purifier',
+    description: 'Designed for classrooms, elder centers, or residential society clubhouses.',
+    estimatedCostINR: 7200,
+    cadrCFM: 950,
+    pm25Efficiency: 0.87,
+    vocRemoval: 'Very High',
+    filterLifeMonths: 3
   }
 };
 
 /**
- * Diurnal Hourly Winter Inversion Curve Multipliers (Hour 0 to 23)
- * Calibrated against atmospheric boundary layer data in northern India.
+ * Validated Botanical Phytoremediation Roster (NASA Clean Air Study validated)
  */
-export const DIURNAL_SMOG_CURVE = [
-  1.32, 1.36, 1.42, 1.48, 1.55, 1.68, // 00:00 - 05:00: Deepening nocturnal radiation inversion
-  1.84, 1.96, 1.88, 1.58, // 06:00 - 09:00: CRITICAL MORNING SMOG TRAP (Rush hour + lowest boundary layer)
-  1.22, 0.96, // 10:00 - 11:00: Solar warming lifts inversion lid
-  0.70, 0.64, 0.68, 0.76, // 12:00 - 15:00: CONVECTIVE SOLAR VENTILATION WINDOW (Safest outdoor hours)
-  0.98, 1.24, // 16:00 - 17:00: Late afternoon cooling & sunset collapse
-  1.56, 1.80, 1.86, 1.74, // 18:00 - 21:00: SECONDARY EVENING ACCUMULATION (Cooking smoke + rush hour)
-  1.52, 1.38 // 22:00 - 23:00: Stable nocturnal inversion holds
-];
-
-/**
- * Practical DIY Indoor Air Quality (IAQ) Hacks
- */
-export const DIY_IAQ_HACKS = [
+export const NASA_PLANT_ROSTER = [
   {
-    id: 'corsi_rosenthal',
-    name: 'DIY Corsi-Rosenthal Box Purifier',
-    tag: 'Highest CADR',
-    reduction: 0.75, // 75% indoor PM2.5 reduction
-    costINR: 4200,
-    commercialEquivINR: 28000,
-    description: 'A 20-inch box fan paired with 4 MERV-13 filters and a cardboard shroud creates 550+ CFM CADR at 1/6th the cost of commercial purifiers.',
-    steps: [
-      'Tape 4 MERV-13 / HEPA filters into a square cube with airflow pointing inwards.',
-      'Place the 20" box fan on top, blowing upwards away from the box.',
-      'Cut a cardboard circular shroud on top of the fan to eliminate blade-tip vortex backflow.',
-      'Seal all seams and bottom cardboard floor with duct tape.'
-    ]
+    id: 'snake_plant',
+    name: 'Snake Plant (Sansevieria Trifasciata)',
+    localName: 'Mother-in-law’s Tongue',
+    primaryPollutants: ['Formaldehyde', 'Benzene', 'CO2 at Night'],
+    crassulaceanAcidMetabolism: true,
+    lightRequirement: 'Low to Indirect',
+    unitsPer100SqFt: 2
   },
   {
-    id: 'window_sealing',
-    name: 'Acoustic & Weatherstrip Draft Sealing',
-    tag: 'Budget Shield',
-    reduction: 0.20,
-    costINR: 350,
-    commercialEquivINR: 2500,
-    description: 'Apply silicone foam weatherstripping tapes to exterior sliding door gaps and deploy door snakes along exterior thresholds.',
-    steps: [
-      'Clean window and door sills with rubbing alcohol.',
-      'Apply self-adhesive EPDM rubber foam tape along window frames.',
-      'Roll a damp towel or weighted fabric door-snake at the bottom of main entrance doors.'
-    ]
+    id: 'areca_palm',
+    name: 'Areca Palm (Chrysalidocarpus Lutescens)',
+    localName: 'Golden Cane Palm',
+    primaryPollutants: ['Toluene', 'Xylene', 'Moisture balance'],
+    crassulaceanAcidMetabolism: false,
+    lightRequirement: 'Filtered Bright',
+    unitsPer100SqFt: 3
   },
   {
-    id: 'wet_mopping',
-    name: 'Microfibre Wet-Mopping Protocol',
-    tag: 'Zero Cost Habit',
-    reduction: 0.25,
-    costINR: 150,
-    commercialEquivINR: 4000,
-    description: 'Dry broom sweeping resuspends 70% of settled fine particles (PM2.5/PM10) straight into alveolar breathing zones. Wet-mopping traps them instantly.',
-    steps: [
-      'Never dry sweep during winter smog season.',
-      'Mop hard floors with a damp microfibre mop once in the morning and once before bedtime.',
-      'Wipe electronics and tabletops with damp electrostatic cloths.'
-    ]
+    id: 'money_plant',
+    name: 'Money Plant (Epipremnum Aureum)',
+    localName: 'Devil’s Ivy',
+    primaryPollutants: ['Benzene', 'Formaldehyde', 'Trichloroethylene'],
+    crassulaceanAcidMetabolism: false,
+    lightRequirement: 'Low / Shade Tolerant',
+    unitsPer100SqFt: 2
   },
   {
-    id: 'kitchen_exhaust',
-    name: 'Kitchen Exhaust Pre-Purge & Lidded Cooking',
-    tag: 'Cooking Protocol',
-    reduction: 0.22,
-    costINR: 0,
-    commercialEquivINR: 0,
-    description: 'Frying spices and unvented gas burners release volatile organic compounds and PM2.5 up to 800 µg/m³. Pre-exhaust clears it before accumulation.',
-    steps: [
-      'Turn on kitchen exhaust fan 2 minutes BEFORE lighting the gas stove or induction.',
-      'Keep cookware lidded to prevent aerosolized oil droplets.',
-      'Keep kitchen doors closed to prevent smoke migration into living and sleeping chambers.'
-    ]
-  },
-  {
-    id: 'phytoremediation',
-    name: 'NASA Botanical Phytoremediation Roster',
-    tag: 'Bio-Filter',
-    reduction: 0.12,
-    costINR: 1200,
-    commercialEquivINR: 6000,
-    description: 'Living bio-filters absorb VOCs (benzene, formaldehyde) and transpire clean humidity that settles suspended micro-dust.',
-    plants: [
-      { name: 'Snake Plant (Sansevieria)', role: 'Nighttime CAM O2 release (ideal for bedrooms)', care: 'Low water' },
-      { name: 'Areca Palm', role: 'Daytime humidity transpiring (settles particulate dust)', care: 'Bright indirect light' },
-      { name: 'Spider Plant', role: 'Carbon monoxide and formaldehyde removal', care: 'Resilient' },
-      { name: 'Golden Pothos (Money Plant)', role: 'Xylene absorption and leaf particulate interception', care: 'Easy' }
-    ]
-  },
-  {
-    id: 'incense_ban',
-    name: 'Cessation of Incense (Agarbatti) & Coils',
-    tag: 'Critical Cessation',
-    reduction: 0.35,
-    costINR: 0,
-    commercialEquivINR: 0,
-    description: 'A single burning agarbatti emits 250-450 µg/m³ of particulate matter and polycyclic aromatic hydrocarbons in closed rooms.',
-    steps: [
-      'Replace burning agarbatti / dhoop with non-thermal electric reed diffusers or LED pooja lamps.',
-      'Replace mosquito coils (which equal ~100 cigarettes in PM2.5 load) with window mesh screens and plug-in electric liquid vaporizers.'
-    ]
+    id: 'spider_plant',
+    name: 'Spider Plant (Chlorophytum Comosum)',
+    localName: 'Airplane Plant',
+    primaryPollutants: ['Carbon Monoxide', 'Ethylbenzene'],
+    crassulaceanAcidMetabolism: false,
+    lightRequirement: 'Indirect Sun',
+    unitsPer100SqFt: 2
   }
 ];
 
 /**
- * Community Smog Shield & Citizen Action Plan
+ * Community Collective Smog Defense Catalog
  */
-export const COMMUNITY_SHIELD_PROTOCOLS = [
+export const COMMUNITY_ACTIONS = [
   {
-    id: 'zero_idle',
-    title: 'Zero-Idling Gate Zone Enforcement',
-    scope: 'Society Gates & School Drop-offs',
-    impact: 'Prevents localized 500+ µg/m³ diesel soot spikes where children assemble.',
-    action: 'Security guards to instruct school vans, delivery vehicles, and cabs to kill engines if stopped for > 30 seconds.'
+    id: 'ban_dg_gensets',
+    title: 'Diesel Generator (DG) Curtailment Protocol',
+    category: 'Emission Abatement',
+    impactPM25AvoidedKgPerDay: 4.8,
+    co2eAvoidedKgPerDay: 42.0,
+    costLevel: 'Zero Cost',
+    description: 'Transition non-emergency backup to battery ESS or grid priority during Severe AQI triggers.'
   },
   {
-    id: 'dg_curfew',
-    title: 'Diesel Generator (DG) Rationalization & Battery Banking',
-    scope: 'Society Infrastructure',
-    impact: 'Reduces up to 80 kg CO2e and high sulfur particulates per power-cut hour.',
-    action: 'Restrict DG usage strictly to emergency lifts and water pumps; prohibit aesthetic garden lighting on DG power.'
+    id: 'water_misting_canons',
+    title: 'Boundary Dust Anti-Smog Water Misting',
+    category: 'Particulate Suppression',
+    impactPM25AvoidedKgPerDay: 3.2,
+    co2eAvoidedKgPerDay: 6.0,
+    costLevel: 'Low',
+    description: 'Targeted fine-droplet atomized water spray at perimeter walls between 7-10 AM to settle coarse PM.'
   },
   {
-    id: 'leaf_compost',
-    title: 'Ban on Waste & Garden Leaf Burning',
-    scope: 'Horticulture & Common Grounds',
-    impact: 'Avoids 1.4 kg CO2e and 18g of toxic PM2.5 per kg of dry leaves.',
-    action: 'Construct on-site compost pits for sweepings and dry foliage; incentivize gardening staff with composting bonuses.'
+    id: 'zero_waste_burning_patrol',
+    title: 'Night Vigil Against Biomass / Leaf Incineration',
+    category: 'Strict Enforcement',
+    impactPM25AvoidedKgPerDay: 6.5,
+    co2eAvoidedKgPerDay: 58.0,
+    costLevel: 'Zero Cost',
+    description: 'Equip society security guards with direct reporting protocols and mulch bins for winter leaves.'
   },
   {
-    id: 'water_misting',
-    title: 'Anti-Smog Boundary Water Misting',
-    scope: 'Internal Society Roads & Perimeters',
-    impact: 'Suppresses 30-40% of resuspended road dust and particulate matter.',
-    action: 'Use recycled STP water via spray hoses along boundary fences between 7 AM - 9 AM and 5 PM - 7 PM.'
+    id: 'staggered_work_transit',
+    title: 'Society-Wide Staggered Commute & Carpool Pool',
+    category: 'Traffic Reduction',
+    impactPM25AvoidedKgPerDay: 2.1,
+    co2eAvoidedKgPerDay: 85.0,
+    costLevel: 'Savings',
+    description: 'Coordinate shared EV/CNG carpooling clusters leaving after 10 AM to miss the peak smog inversion trap.'
+  },
+  {
+    id: 'hepa_clean_room_oasis',
+    title: 'Shared Clubhouse Clean Air Emergency Shelter',
+    category: 'Vulnerable Care',
+    impactPM25AvoidedKgPerDay: 1.8,
+    co2eAvoidedKgPerDay: 12.0,
+    costLevel: 'Medium',
+    description: 'Convert community hall into a positive-pressure, multi-filter refuge for seniors and infants during AQI > 400.'
   }
 ];
